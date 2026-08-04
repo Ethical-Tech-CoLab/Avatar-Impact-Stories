@@ -1,7 +1,7 @@
 {
   "grid": {
-    "rows": 5,
-    "cols": 6,
+    "rows": 0,
+    "cols": 0,
     "scatter": 0.16,
     "gapRatio": 0.16,
     "tilt": 4

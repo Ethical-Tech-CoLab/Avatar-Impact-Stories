@@ -113,6 +113,63 @@
         background: #000;
     }
 
+    /* Shown only while the player is genuinely waiting on data, so a slow
+       network reads as "loading" rather than "broken". */
+    #overlay.is-buffering #player-frame::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 44px;
+        height: 44px;
+        margin: -22px 0 0 -22px;
+        border-radius: 50%;
+        border: 3px solid rgba(255, 255, 255, .25);
+        border-top-color: rgba(255, 255, 255, .9);
+        animation: spin 900ms linear infinite;
+        pointer-events: none;
+        z-index: 3;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #overlay.is-buffering #player-frame::after { animation: none; }
+    }
+
+    /* Disclosure watermark: the presenter is synthetic, and the viewer should
+       never have to guess. Sits over the video, bottom-left, and is excluded
+       from pointer events so it cannot block the dismiss-on-click backdrop. */
+    #ai-badge {
+        position: absolute;
+        left: 3.5%;
+        bottom: 3.5%;
+        z-index: 2;
+        padding: .3em .62em;
+        border-radius: .4em;
+        font-size: clamp(13px, 2.4vh, 22px);
+        font-weight: 700;
+        letter-spacing: .09em;
+        line-height: 1;
+        color: rgba(255, 255, 255, .92);
+        background: rgba(255, 255, 255, .18);
+        border: 1px solid rgba(255, 255, 255, .35);
+        /* Keeps it legible over both a bright face and a dark background. */
+        text-shadow: 0 1px 3px rgba(0, 0, 0, .55);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        pointer-events: none;
+        user-select: none;
+        opacity: 0;
+        transition: opacity .25s ease;
+    }
+
+    #overlay.is-open #ai-badge {
+        opacity: 1;
+    }
+
     #caption {
         position: absolute;
         left: 0;
@@ -221,7 +278,10 @@
 
 <div id="overlay">
     <div id="player-frame">
-        <video id="player" playsinline preload="none"></video>
+        <video id="player" playsinline preload="metadata"></video>
+        <!-- Disclosure: every presenter on this wall is AI-generated. It sits
+             inside the frame so it scales and animates with the video. -->
+        <div id="ai-badge" aria-label="This presenter is AI-generated">AI</div>
         <div id="caption"></div>
     </div>
 </div>
@@ -256,8 +316,8 @@
     'use strict';
 
     var DEFAULTS = {
-        rows: 5,
-        cols: 6,
+        rows: 0,          // 0 = derive the grid from the number of stories
+        cols: 0,          // set both to force a fixed grid instead
         scatter: 0.16,   // max positional jitter, as a fraction of tile size
         gapRatio: 0.16,  // spacing between tiles, as a fraction of tile size
         tilt: 4,         // max rotation in degrees, +/-
@@ -364,6 +424,65 @@
         });
     }
 
+    /* ------------------------------------------------------------------ *
+     * Offline media cache
+     *
+     * Streaming a 5-30 MB story over venue Wi-Fi stalls, and it always stalls
+     * mid-testimony. sw.js keeps the media in the Cache API so a story plays
+     * from local disk once it has been fetched. Caching happens through the
+     * service worker rather than blob URLs on purpose: a blob per story would
+     * pin tens of megabytes of JS heap and bring back the leak that used to
+     * kill the kiosk after a few hours.
+     * ------------------------------------------------------------------ */
+
+    var swReady = null;
+
+    function initMediaCache() {
+        if (!('serviceWorker' in navigator)) return;
+        // Requires a secure context; file:// and plain http (other than
+        // localhost) simply fall back to normal streaming.
+        if (!window.isSecureContext) return;
+
+        swReady = navigator.serviceWorker.register('sw.js')
+            .then(function () { return navigator.serviceWorker.ready; })
+            .catch(function (err) {
+                console.warn('Media cache unavailable; streaming directly.', err);
+                return null;
+            });
+    }
+
+    // Suspend background warming for as long as a story is on screen, so the
+    // download queue can never compete with the story being watched.
+    function notifyCache(type) {
+        if (!swReady) return;
+        swReady.then(function (registration) {
+            if (registration && registration.active) {
+                registration.active.postMessage({ type: type });
+            }
+        }).catch(function () {});
+    }
+
+    // Warm the cache while the wall is idle, in wall order, so the stories most
+    // likely to be tapped first are the first to become instant. Deliberately
+    // deferred: it must never compete with a story that is already playing.
+    function warmCache() {
+        if (!swReady) return;
+        swReady.then(function (registration) {
+            if (!registration || !registration.active) return;
+            var urls = tiles.map(function (tile) {
+                return stories[Number(tile.dataset.storyIndex)].video;
+            }).filter(function (href) {
+                // Only same-origin media can be cached by our worker.
+                return href && !/^([a-z][a-z0-9+.-]*:)?\/\//i.test(href);
+            }).map(function (href) {
+                return new URL(href, location.href).href;
+            });
+            if (urls.length) {
+                registration.active.postMessage({ type: 'warm', urls: urls });
+            }
+        });
+    }
+
     function showError(message, detail) {
         errorMessage.textContent = message;
         errorDetail.textContent = detail || '';
@@ -423,12 +542,44 @@
         tiles.forEach(function (tile) {
             var row = Number(tile.dataset.row);
             var col = Number(tile.dataset.col);
-            var x = m.marginX + col * (m.tileW + m.gapX) + Number(tile.dataset.jitterX) * m.jitterX;
+            var rowCount = Number(tile.dataset.rowCount) || config.cols;
+            // Centre a short final row rather than leaving it hanging left.
+            var indent = (config.cols - rowCount) * (m.tileW + m.gapX) / 2;
+            var x = m.marginX + indent + col * (m.tileW + m.gapX)
+                + Number(tile.dataset.jitterX) * m.jitterX;
             var y = m.marginY + row * (m.tileH + m.gapY) + Number(tile.dataset.jitterY) * m.jitterY;
             tile.style.left = Math.round(x) + 'px';
             tile.style.top = Math.round(y) + 'px';
             tile.style.transform = 'rotate(' + tile.dataset.tilt + 'deg)';
         });
+    }
+
+    // The wall must never show the same person twice — repeating a face is the
+    // one thing that undercuts a piece called "Many Voices". So the grid is
+    // derived from how many stories exist rather than being fixed at 5x6, and
+    // exactly one tile is created per story.
+    //
+    // Picks the rows/cols split whose overall shape best matches the display,
+    // preferring layouts that leave few empty seats in the final row.
+    function computeGrid(count) {
+        if (config.rows > 0 && config.cols > 0) {
+            return { rows: config.rows, cols: config.cols, explicit: true };
+        }
+        var stageAspect = (stage.clientWidth || 1920) / (stage.clientHeight || 1080);
+        var best = null;
+        for (var cols = 1; cols <= count; cols++) {
+            var rows = Math.ceil(count / cols);
+            var wallAspect = (cols * TILE_ASPECT) / rows;
+            // How far the wall's shape is from the screen's shape.
+            var shapeCost = Math.abs(Math.log(wallAspect / stageAspect));
+            // How many seats in the last row would sit empty.
+            var gapCost = (rows * cols - count) * 0.06;
+            var cost = shapeCost + gapCost;
+            if (!best || cost < best.cost) {
+                best = { rows: rows, cols: cols, cost: cost };
+            }
+        }
+        return best;
     }
 
     function shuffled(length) {
@@ -447,36 +598,47 @@
         stage.textContent = '';
         tiles = [];
 
-        var order = shuffled(stories.length);
-        var seat = 0;
+        var grid = computeGrid(stories.length);
+        config.rows = grid.rows;
+        config.cols = grid.cols;
 
-        for (var row = 0; row < config.rows; row++) {
-            for (var col = 0; col < config.cols; col++) {
-                var index = order[seat % order.length];
-                var story = stories[index];
+        // One seat per story, never more: seats beyond the story count are left
+        // empty rather than filled with a repeat.
+        var seats = grid.explicit
+            ? Math.min(grid.rows * grid.cols, stories.length)
+            : stories.length;
+        var order = shuffled(stories.length).slice(0, seats);
 
-                var tile = document.createElement('div');
-                tile.className = 'phone-tile';
-                tile.dataset.row = row;
-                tile.dataset.col = col;
-                tile.dataset.storyIndex = index;
-                tile.dataset.jitterX = (Math.random() * 2 - 1).toFixed(4);
-                tile.dataset.jitterY = (Math.random() * 2 - 1).toFixed(4);
-                tile.dataset.tilt = ((Math.random() - 0.5) * config.tilt).toFixed(2);
-                tile.setAttribute('role', 'button');
-                tile.tabIndex = 0;
-                tile.setAttribute('aria-label', 'Play story: ' + (story.title || 'untitled'));
+        for (var seat = 0; seat < order.length; seat++) {
+            var row = Math.floor(seat / grid.cols);
+            var col = seat % grid.cols;
+            var index = order[seat];
+            var story = stories[index];
 
-                var poster = document.createElement('img');
-                poster.src = story.poster;
-                poster.alt = '';
-                poster.decoding = 'async';
-                tile.appendChild(poster);
+            // A short final row is centred so the wall does not look truncated.
+            var inThisRow = Math.min(grid.cols, order.length - row * grid.cols);
 
-                stage.appendChild(tile);
-                tiles.push(tile);
-                seat++;
-            }
+            var tile = document.createElement('div');
+            tile.className = 'phone-tile';
+            tile.dataset.row = row;
+            tile.dataset.col = col;
+            tile.dataset.rowCount = inThisRow;
+            tile.dataset.storyIndex = index;
+            tile.dataset.jitterX = (Math.random() * 2 - 1).toFixed(4);
+            tile.dataset.jitterY = (Math.random() * 2 - 1).toFixed(4);
+            tile.dataset.tilt = ((Math.random() - 0.5) * config.tilt).toFixed(2);
+            tile.setAttribute('role', 'button');
+            tile.tabIndex = 0;
+            tile.setAttribute('aria-label', 'Play story: ' + (story.title || 'untitled'));
+
+            var poster = document.createElement('img');
+            poster.src = story.poster;
+            poster.alt = '';
+            poster.decoding = 'async';
+            tile.appendChild(poster);
+
+            stage.appendChild(tile);
+            tiles.push(tile);
         }
 
         placeTiles();
@@ -534,6 +696,7 @@
         var mySession = ++session;
         activeTile = tile;
         tile.classList.add('is-source');
+        notifyCache('pause');
 
         caption.textContent = story.title || '';
         overlay.classList.add('is-open');
@@ -558,9 +721,22 @@
 
         armWatchdog(LOAD_TIMEOUT_MS);
 
-        openTimer = setTimeout(function () {
-            openTimer = null;
-            if (mySession !== session) return;
+        // Start when the media is actually ready, not on a blind timer. Kicking
+        // play() before anything is buffered is what produces the stutter in the
+        // first second or two of a story. The animation delay is a floor, the
+        // watchdog is the ceiling, and whichever readiness signal arrives first
+        // wins.
+        var started = false;
+        var animationDone = false;
+        var mediaReady = player.readyState >= 3;   // HAVE_FUTURE_DATA
+
+        function beginPlayback() {
+            if (started || mySession !== session) return;
+            if (!animationDone || !mediaReady) return;
+            started = true;
+            player.removeEventListener('canplay', onReady);
+            player.removeEventListener('canplaythrough', onReady);
+            overlay.classList.remove('is-buffering');
 
             // play() rejects on autoplay refusal, a decode failure or a torn-down
             // element. A genuine failure must funnel into the same recovery path,
@@ -577,6 +753,22 @@
                     closeStory();
                 });
             }
+        }
+
+        function onReady() {
+            mediaReady = true;
+            beginPlayback();
+        }
+
+        player.addEventListener('canplay', onReady);
+        player.addEventListener('canplaythrough', onReady);
+
+        openTimer = setTimeout(function () {
+            openTimer = null;
+            if (mySession !== session) return;
+            animationDone = true;
+            if (!mediaReady) overlay.classList.add('is-buffering');
+            beginPlayback();
         }, 550 + config.openDelayMs);
     }
 
@@ -589,6 +781,7 @@
         clearTimers();
 
         player.pause();
+        overlay.classList.remove('is-buffering');
         // Detaching the source is what actually frees the decoded video buffer.
         // Without this the kiosk accumulates one buffer per story played.
         player.removeAttribute('src');
@@ -616,13 +809,25 @@
 
         var resume = ambience.play();
         if (resume && typeof resume.catch === 'function') resume.catch(function () {});
+        notifyCache('resume');
     }
 
     player.addEventListener('ended', closeStory);
     player.addEventListener('error', function () {
-        // Detaching the src on close also raises an error event; ignore that one.
+        // Detaching the src on close also raises an error event, and it arrives
+        // asynchronously — often after the next story has already opened and
+        // attached its own src. Acting on it would tear down the new story
+        // instead of the old one, leaving a tile that simply does nothing when
+        // tapped.
+        //
+        // player.error is what separates the two cases: a genuine failure sets a
+        // MediaError before the event is dispatched, whereas the new story's
+        // load() clears it back to null, so a stale teardown event always
+        // arrives with nothing attached.
         if (!isBusy) return;
-        console.error('Video error', player.error);
+        if (!player.error) return;
+        console.error('Video error', player.error && player.error.code,
+                      player.error && player.error.message, player.currentSrc);
         closeStory();
     });
     player.addEventListener('loadedmetadata', function () {
@@ -631,6 +836,23 @@
         if (isFinite(player.duration) && player.duration > 0) {
             armWatchdog(player.duration * 1000 + OVERRUN_GRACE_MS);
         }
+    });
+
+    // A stall must not cost the visitor the end of the story. The watchdog is
+    // re-armed against the time *remaining*, so buffering delays extend the
+    // deadline instead of cutting the testimony off part-way through.
+    player.addEventListener('timeupdate', function () {
+        if (!isBusy || !isFinite(player.duration) || player.duration <= 0) return;
+        var remaining = (player.duration - player.currentTime) * 1000;
+        armWatchdog(Math.max(remaining, 1000) + OVERRUN_GRACE_MS);
+    });
+
+    // Tell the visitor the wall is working rather than broken.
+    player.addEventListener('waiting', function () {
+        if (isBusy) overlay.classList.add('is-buffering');
+    });
+    player.addEventListener('playing', function () {
+        overlay.classList.remove('is-buffering');
     });
 
     closeButton.addEventListener('click', closeStory);
@@ -710,9 +932,18 @@
         buildWall();
         var play = ambience.play();
         if (play && typeof play.catch === 'function') play.catch(function () {});
+
+        // Pull the stories into the local cache while nobody is watching, so
+        // the first tap on each phone plays instantly instead of buffering.
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(warmCache, { timeout: 4000 });
+        } else {
+            setTimeout(warmCache, 2500);
+        }
     }
 
     async function boot() {
+        initMediaCache();
         try {
             stories = await loadManifest();
             startButton.disabled = false;

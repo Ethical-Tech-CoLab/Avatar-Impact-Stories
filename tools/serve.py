@@ -14,7 +14,9 @@ from __future__ import annotations
 import argparse
 import functools
 import http.server
+import io
 import json
+import os
 import socketserver
 import sys
 import threading
@@ -26,8 +28,15 @@ ROOT = Path(__file__).resolve().parent.parent
 MEDIA_DIR = ROOT / "final_gifs"
 MANIFEST = ROOT / "stories.json"
 
-DEFAULT_GRID = {"rows": 5, "cols": 6, "scatter": 0.16, "gapRatio": 0.16, "tilt": 4}
-DEFAULT_BACKGROUND = {"image": "Crowd.png", "audio": "background%20testing.mp3"}
+DEFAULT_GRID = {"rows": 0, "cols": 0, "scatter": 0.16, "gapRatio": 0.16, "tilt": 4}
+
+# Replacing the backdrop should not require editing code or JSON: drop a file
+# named background.png (or .jpg/.jpeg/.webp) in the project root and it wins.
+# The same applies to the ambient bed as background.mp3 (or .m4a/.ogg/.wav).
+BACKGROUND_IMAGE_NAMES = ["background.png", "background.jpg", "background.jpeg",
+                          "background.webp", "Crowd.png"]
+BACKGROUND_AUDIO_NAMES = ["background.mp3", "background.m4a", "background.ogg",
+                          "background.wav", "background testing.mp3"]
 
 # Some exports have non-ASCII characters in their names; the default Windows
 # console encoding cannot print them.
@@ -48,6 +57,20 @@ def prettify(stem: str) -> str:
         if title.endswith(suffix):
             title = title[: -len(suffix)]
     return " ".join(title.split())
+
+
+def find_background() -> dict:
+    """Pick the backdrop and ambient bed, preferring a drop-in replacement."""
+    result = {}
+    for name in BACKGROUND_IMAGE_NAMES:
+        if (ROOT / name).is_file():
+            result["image"] = url_for(ROOT / name)
+            break
+    for name in BACKGROUND_AUDIO_NAMES:
+        if (ROOT / name).is_file():
+            result["audio"] = url_for(ROOT / name)
+            break
+    return result
 
 
 def discover() -> tuple[list[dict], list[str]]:
@@ -104,14 +127,34 @@ def build_manifest() -> dict:
         if kept:
             story["title"] = kept
 
+    # Start from defaults, keep any aesthetic tuning, then sanity-check the grid.
+    grid = dict(DEFAULT_GRID)
+    grid.update({k: v for k, v in existing.get("grid", {}).items() if k in grid})
+
+    # A fixed grid with more seats than stories used to repeat stories to fill
+    # the gap, which put the same face on the wall several times over. Fall back
+    # to the automatic layout instead, which fits the grid to the story count.
+    if grid["rows"] * grid["cols"] > len(stories):
+        if grid["rows"] or grid["cols"]:
+            print(f"  ! Grid {grid['rows']}x{grid['cols']} has more tiles than stories "
+                  f"({len(stories)}); switching to automatic layout so no story repeats.")
+        grid["rows"] = 0
+        grid["cols"] = 0
+
+    background = find_background()
+    if not background.get("image"):
+        print("  ! No background image found. Add background.png to the project root.")
+
     manifest = {
-        "grid": existing.get("grid", DEFAULT_GRID),
-        "background": existing.get("background", DEFAULT_BACKGROUND),
+        "grid": grid,
+        "background": background,
         "stories": stories,
     }
     MANIFEST.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     print(f"  {len(stories)} story pair(s) written to stories.json")
+    print(f"  Background: {unquote(background.get('image', 'none'))}"
+          f" + {unquote(background.get('audio', 'no audio'))}")
     for name in unpaired:
         print(f"  ! Skipped {name}")
 
@@ -126,14 +169,96 @@ def build_manifest() -> dict:
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    """Static handler with HTTP range support.
+
+    Python's SimpleHTTPRequestHandler ignores Range headers entirely, so a
+    browser cannot seek and has to refetch a video from byte zero. For a
+    100 MB story that shows up as stalling and stuttering. Serving 206
+    responses fixes seeking and lets the player buffer incrementally.
+    """
+
     def end_headers(self) -> None:
-        # Stop the browser caching a stale manifest between runs.
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Accept-Ranges", "bytes")
+        if self.path.rstrip("/").endswith(("stories.json", "/")) or self.path == "/":
+            # Stop the browser caching a stale manifest between runs.
+            self.send_header("Cache-Control", "no-store")
+        else:
+            # Media is content-addressed by name and rarely changes; letting the
+            # browser cache it is the difference between streaming a story once
+            # and streaming it on every single tap.
+            self.send_header("Cache-Control", "public, max-age=604800")
         super().end_headers()
+
+    def send_head(self):
+        rng = self.headers.get("Range")
+        if not rng or not rng.startswith("bytes="):
+            return super().send_head()
+
+        path = self.translate_path(self.path)
+        try:
+            fh = open(path, "rb")
+        except OSError:
+            self.send_error(404, "File not found")
+            return None
+
+        try:
+            size = os.fstat(fh.fileno()).st_size
+            first, _, last = rng[6:].partition("-")
+            try:
+                start = int(first) if first else max(0, size - int(last))
+                end = int(last) if (last and first) else size - 1
+            except ValueError:
+                fh.close()
+                self.send_error(400, "Bad Range header")
+                return None
+            end = min(end, size - 1)
+            if start > end or start >= size:
+                fh.close()
+                self.send_response(416)
+                self.send_header("Content-Range", f"bytes */{size}")
+                self.end_headers()
+                return None
+
+            fh.seek(start)
+            self.send_response(206)
+            self.send_header("Content-Type", self.guess_type(path))
+            self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+            self.send_header("Content-Length", str(end - start + 1))
+            self.end_headers()
+            return _RangeReader(fh, end - start + 1)
+        except Exception:
+            fh.close()
+            raise
 
     def log_message(self, fmt: str, *args) -> None:  # quieter console
         if "404" in (fmt % args):
             super().log_message(fmt, *args)
+
+
+class _RangeReader(io.RawIOBase):
+    """Reads at most ``remaining`` bytes so copyfile stops at the range end."""
+
+    def __init__(self, fh, remaining: int):
+        self._fh = fh
+        self._remaining = remaining
+
+    def read(self, size: int = -1) -> bytes:
+        if self._remaining <= 0:
+            return b""
+        if size is None or size < 0 or size > self._remaining:
+            size = self._remaining
+        data = self._fh.read(size)
+        self._remaining -= len(data)
+        return data
+
+    def readable(self) -> bool:
+        return True
+
+    def close(self) -> None:
+        try:
+            self._fh.close()
+        finally:
+            super().close()
 
 
 class Server(socketserver.ThreadingTCPServer):

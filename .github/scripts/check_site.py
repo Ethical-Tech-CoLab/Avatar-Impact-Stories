@@ -24,6 +24,16 @@ def main() -> int:
     base = manifest.get("mediaBase", "")
     missing = []
     checked = 0
+
+    # The backdrop is easy to forget when swapping it, and a missing one leaves
+    # the wall on a black screen rather than failing loudly.
+    for key, label in (("image", "background image"), ("audio", "ambient audio")):
+        ref = manifest.get("background", {}).get(key, "")
+        if not ref or ref.startswith(("http://", "https://")):
+            continue
+        if not os.path.isfile(os.path.join(SITE, urllib.parse.unquote(ref))):
+            missing.append(f"{label}: {ref}")
+
     for story in stories:
         for key in ("poster", "video"):
             ref = story.get(key, "")

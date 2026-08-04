@@ -17,10 +17,12 @@ on:
     branches: [main]
     paths:
       - index.html
+      - sw.js
       - stories.json
       - stories.web.json
       - final_gifs/**
       - Crowd.png
+      - background.*
       - background testing.mp3
       - .github/workflows/pages.yml
   workflow_dispatch:
@@ -51,8 +53,13 @@ jobs:
           set -euo pipefail
 
           mkdir -p _site/final_gifs
-          cp index.html _site/
+          cp index.html sw.js _site/
           cp Crowd.png "background testing.mp3" _site/
+          # Whatever drop-in background is in use, if any.
+          for f in background.png background.jpg background.jpeg background.webp \
+                   background.mp3 background.m4a background.ogg background.wav; do
+            if [ -f "$f" ]; then cp "$f" _site/; fi
+          done
           cp final_gifs/*.gif _site/final_gifs/
 
           if [ -f stories.web.json ]; then
