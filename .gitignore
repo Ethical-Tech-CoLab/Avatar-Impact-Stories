@@ -19,3 +19,7 @@ desktop.ini
 # Local exports and scratch renders
 /exports/
 /tmp/
+
+# Python
+__pycache__/
+*.pyc

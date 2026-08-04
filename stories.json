@@ -1,0 +1,141 @@
+{
+  "grid": {
+    "rows": 5,
+    "cols": 6,
+    "scatter": 0.16,
+    "gapRatio": 0.16,
+    "tilt": 4
+  },
+  "background": {
+    "image": "Crowd.png",
+    "audio": "background%20testing.mp3"
+  },
+  "stories": [
+    {
+      "id": "Adam (Child Labour) - Alexa",
+      "title": "Adam (Child Labour) - Alexa",
+      "poster": "final_gifs/Adam%20%28Child%20Labour%29%20-%20Alexa.gif",
+      "video": "final_gifs/Adam%20%28Child%20Labour%29%20-%20Alexa.mp4"
+    },
+    {
+      "id": "Amala (Child Labour) - Alexa",
+      "title": "Amala (Child Labour) - Alexa",
+      "poster": "final_gifs/Amala%20%28Child%20Labour%29%20-%20Alexa.gif",
+      "video": "final_gifs/Amala%20%28Child%20Labour%29%20-%20Alexa.mp4"
+    },
+    {
+      "id": "arabic",
+      "title": "arabic",
+      "poster": "final_gifs/arabic.gif",
+      "video": "final_gifs/arabic.mp4"
+    },
+    {
+      "id": "Congo (Cobalt Mines)",
+      "title": "Congo (Cobalt Mines)",
+      "poster": "final_gifs/Congo%20%28Cobalt%20Mines%29.gif",
+      "video": "final_gifs/Congo%20%28Cobalt%20Mines%29.mp4"
+    },
+    {
+      "id": "Domestic Violence 1 - Smita Samanta",
+      "title": "Domestic Violence 1 - Smita Samanta",
+      "poster": "final_gifs/Domestic%20Violence%201%20-%20Smita%20Samanta.gif",
+      "video": "final_gifs/Domestic%20Violence%201%20-%20Smita%20Samanta.mp4"
+    },
+    {
+      "id": "Domestic Violence 2 - Smita Samanta",
+      "title": "Domestic Violence 2 - Smita Samanta",
+      "poster": "final_gifs/Domestic%20Violence%202%20-%20Smita%20Samanta.gif",
+      "video": "final_gifs/Domestic%20Violence%202%20-%20Smita%20Samanta.mp4"
+    },
+    {
+      "id": "Domestic Violence 3 - Smita Samanta",
+      "title": "Domestic Violence 3 - Smita Samanta",
+      "poster": "final_gifs/Domestic%20Violence%203%20-%20Smita%20Samanta.gif",
+      "video": "final_gifs/Domestic%20Violence%203%20-%20Smita%20Samanta.mp4"
+    },
+    {
+      "id": "Dorothy_s Story - Nate",
+      "title": "Dorothy's Story - Nate",
+      "poster": "final_gifs/Dorothy_s%20Story%20-%20Nate.gif",
+      "video": "final_gifs/Dorothy_s%20Story%20-%20Nate.mp4"
+    },
+    {
+      "id": "Forced Labor - Celine R.",
+      "title": "Forced Labor - Celine R.",
+      "poster": "final_gifs/Forced%20Labor%20-%20Celine%20R..gif",
+      "video": "final_gifs/Forced%20Labor%20-%20Celine%20R..mp4"
+    },
+    {
+      "id": "George (church)",
+      "title": "George (church)",
+      "poster": "final_gifs/George%20%28church%29.gif",
+      "video": "final_gifs/George%20%28church%29.mp4"
+    },
+    {
+      "id": "Human Trafficking - Smita Samanta",
+      "title": "Human Trafficking - Smita Samanta",
+      "poster": "final_gifs/Human%20Trafficking%20-%20Smita%20Samanta.gif",
+      "video": "final_gifs/Human%20Trafficking%20-%20Smita%20Samanta.mp4"
+    },
+    {
+      "id": "Jaoanese (Forced Conscription)",
+      "title": "Jaoanese (Forced Conscription)",
+      "poster": "final_gifs/Jaoanese%20%28Forced%20Conscription%29.gif",
+      "video": "final_gifs/Jaoanese%20%28Forced%20Conscription%29.mp4"
+    },
+    {
+      "id": "Kayla (sex trafficking)",
+      "title": "Kayla (sex trafficking)",
+      "poster": "final_gifs/Kayla%20%28sex%20trafficking%29.gif",
+      "video": "final_gifs/Kayla%20%28sex%20trafficking%29.mp4"
+    },
+    {
+      "id": "Latin Kings (Conscription)",
+      "title": "Latin Kings (Conscription)",
+      "poster": "final_gifs/Latin%20Kings%20%28Conscription%29.gif",
+      "video": "final_gifs/Latin%20Kings%20%28Conscription%29.mp4"
+    },
+    {
+      "id": "Survivor - Forced Labor #4",
+      "title": "Survivor - Forced Labor #4",
+      "poster": "final_gifs/Survivor%20-%20Forced%20Labor%20%234.gif",
+      "video": "final_gifs/Survivor%20-%20Forced%20Labor%20%234.mp4"
+    },
+    {
+      "id": "The True Cost of Your Chocolate ΓÇô A Cocoa Farmer Speaks copy",
+      "title": "The True Cost of Your Chocolate ΓÇô A Cocoa Farmer Speaks",
+      "poster": "final_gifs/The%20True%20Cost%20of%20Your%20Chocolate%20%CE%93%C3%87%C3%B4%20A%20Cocoa%20Farmer%20Speaks%20copy.gif",
+      "video": "final_gifs/The%20True%20Cost%20of%20Your%20Chocolate%20%CE%93%C3%87%C3%B4%20A%20Cocoa%20Farmer%20Speaks%20copy.mp4"
+    },
+    {
+      "id": "Unethical Labour - Josh (Alexa)",
+      "title": "Unethical Labour - Josh (Alexa)",
+      "poster": "final_gifs/Unethical%20Labour%20-%20Josh%20%28Alexa%29.gif",
+      "video": "final_gifs/Unethical%20Labour%20-%20Josh%20%28Alexa%29.mp4"
+    },
+    {
+      "id": "vid",
+      "title": "vid",
+      "poster": "final_gifs/vid.gif",
+      "video": "final_gifs/vid.mp4"
+    },
+    {
+      "id": "zoti",
+      "title": "zoti",
+      "poster": "final_gifs/zoti.gif",
+      "video": "final_gifs/zoti.mp4"
+    },
+    {
+      "id": "zoti (1)",
+      "title": "zoti (1)",
+      "poster": "final_gifs/zoti%20%281%29.gif",
+      "video": "final_gifs/zoti%20%281%29.mp4"
+    },
+    {
+      "id": "zoti (2)",
+      "title": "zoti (2)",
+      "poster": "final_gifs/zoti%20%282%29.gif",
+      "video": "final_gifs/zoti%20%282%29.mp4"
+    }
+  ]
+}
