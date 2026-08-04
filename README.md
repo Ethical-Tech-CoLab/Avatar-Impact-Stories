@@ -125,7 +125,7 @@ autoplayed at a passer-by. When a story ends, the wall returns to its idle state
 | `tools/test_kiosk.py` | End-to-end regression suite (see [Running the tests](#running-the-tests)). |
 | `.github/workflows/pages.yml` | Builds and deploys the GitHub Pages demo. |
 | `start.cmd` / `start.sh` | One-click wrappers around `tools/serve.py`. |
-| `final_gifs/` | Story media. Each story is a pair: a `.gif` loop for the idle tile and an `.mp4` with audio for playback. |
+| `final_gifs/` | Story media. Each story is a set: a `.webp` loop for the idle tile (with a `.gif` fallback) and an `.mp4` with audio for playback. |
 | `Crowd.png` | Default background image for the wall. Drop in `background.png` to override it. |
 | `background testing.mp3` | Default ambient audio, looped while the wall is idle. Override with `background.mp3`. |
 | `phone1.png` | Phone-frame reference art. |
