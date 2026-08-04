@@ -1,20 +1,27 @@
 name: Deploy demo to GitHub Pages
 
-# GitHub Pages cannot serve Git LFS files directly, and the full media set is
-# far larger than the 1 GB Pages limit. This workflow works around both:
+# GitHub Pages cannot serve Git LFS files directly — point Pages at a branch and
+# every tile renders as a broken image, because Pages serves the ~130-byte
+# pointer file rather than the media.
 #
-#   * actions/checkout resolves LFS, so the artifact contains real bytes rather
-#     than pointer files;
-#   * only the page and the small GIF posters (~80 MB) are published, while the
-#     MP4s stream from release assets referenced by stories.web.json.
+# actions/checkout with lfs:true resolves LFS at build time, so the artifact
+# uploaded to Pages contains real bytes. After compression the whole media set
+# is ~436 MB, which fits inside the 1 GB Pages limit, so the site is entirely
+# self-contained: no release assets, no external CDN, no separate manifest.
+#
+# If the media ever outgrows the limit again, tools/publish_web.py moves the
+# MP4s to release assets and writes stories.web.json; see the README.
 
 on:
   push:
     branches: [main]
     paths:
       - index.html
+      - stories.json
       - stories.web.json
       - final_gifs/**
+      - Crowd.png
+      - background testing.mp3
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -37,24 +44,25 @@ jobs:
           lfs: true
 
       - name: Fetch LFS objects
-        run: git lfs pull --include "final_gifs/*.gif,Crowd.png,background testing.mp3"
+        run: git lfs pull
 
       - name: Assemble the site
         run: |
           set -euo pipefail
-
-          if [ ! -f stories.web.json ]; then
-            echo "::error::stories.web.json is missing. Run 'python tools/publish_web.py --upload' and commit the result."
-            exit 1
-          fi
 
           mkdir -p _site/final_gifs
           cp index.html _site/
           cp Crowd.png "background testing.mp3" _site/
           cp final_gifs/*.gif _site/final_gifs/
 
-          # The published manifest points at release-hosted videos.
-          cp stories.web.json _site/stories.json
+          if [ -f stories.web.json ]; then
+            echo "Using stories.web.json (media hosted off-site)."
+            cp stories.web.json _site/stories.json
+          else
+            echo "Publishing media with the site."
+            cp final_gifs/*.mp4 _site/final_gifs/
+            cp stories.json _site/stories.json
+          fi
 
           # Pages would otherwise run the whole thing through Jekyll and drop
           # files it does not recognise.
@@ -68,23 +76,26 @@ jobs:
         run: |
           set -euo pipefail
           bad=0
-          for f in _site/final_gifs/*.gif _site/Crowd.png; do
+          # Real GIFs start "GIF89a"; LFS pointers start "version".
+          for f in _site/final_gifs/* _site/Crowd.png "_site/background testing.mp3"; do
+            [ -f "$f" ] || continue
             if [ "$(head -c 7 "$f")" = "version" ]; then
               echo "::error::$f is still a Git LFS pointer, not real media."
               bad=1
             fi
           done
-          if [ "$bad" -ne 0 ]; then
-            exit 1
-          fi
+          [ "$bad" -eq 0 ] || exit 1
           echo "All media resolved to real files."
+
+      - name: Check every story in the manifest actually shipped
+        run: python3 .github/scripts/check_site.py
 
       - name: Check the artifact fits the Pages limit
         run: |
           bytes=$(du -sb _site | cut -f1)
           echo "Artifact is $((bytes / 1000000)) MB."
           if [ "$bytes" -gt 1000000000 ]; then
-            echo "::error::Artifact exceeds the 1 GB GitHub Pages limit."
+            echo "::error::Artifact exceeds the 1 GB GitHub Pages limit. Move the videos off-site with tools/publish_web.py."
             exit 1
           fi
 
