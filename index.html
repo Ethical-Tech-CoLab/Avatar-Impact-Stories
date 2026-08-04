@@ -1,0 +1,316 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Avatar Dashboard</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <style>
+        /* Layout styles for each phone tile */
+        .phone-tile {
+            position: absolute;
+            overflow: hidden;
+            transition: all 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: #1a1a1a;
+            padding: 4px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            width: 100px;
+            height: 178px;
+            transform-origin: center;
+        }
+        
+        /* styling at the top of each tile */
+        .phone-tile::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 2px;
+            background: #2a2a2a;
+            border-radius: 3px;
+            z-index: 2;
+        }
+        
+        /* gif inside each tile */
+        .phone-tile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            clip-path: inset(0% round 12px);
+            position: relative;
+            z-index: 1;
+            transform: translateZ(0);
+            will-change: transform, clip-path;
+        }
+
+        .phone-tile video {
+            width: 95%;
+            height: 95%;
+            object-fit: cover;
+            border-radius: 12px;
+            clip-path: inset(0% round 12px);
+            position: absolute;
+            z-index: 1;
+            transform: translateZ(0);
+            will-change: transform, clip-path;
+        }
+        
+        /* enlarged view of a tile */
+        .enlarged {
+            transform: translate(-50%, -50%) scale(6.5) rotate(0deg);
+            z-index: 1100 !important;
+            left: 50% !important;
+            top: 50% !important;
+        }
+    </style>
+</head>
+<body style="margin:0px;">
+    <button id="pick-directory">Select Directory</button>
+    <audio id="background-audio" src="background testing.mp3" loop></audio>
+    <div id="output" style="position:absolute; width:100vw; height:100vh; background-image:url(Crowd.png); background-size: cover; background-position: center;"></div>
+
+    <script type="text/javascript">
+        var TOTAL_VIDEOS;
+        var ROWS = 5;
+        var COLS = 6;
+        var tiles = [];
+        var videofiles = [];
+        var giffiles = [];
+        var videoGifMap = new Map();
+        var selectedTile = null;
+        var isTileEnlarged = false;
+        var backgroundAudio;
+        var videoEnded = false;
+
+        if ('showDirectoryPicker' in window) {
+            const pickDirectoryButton = document.getElementById('pick-directory');
+            
+            pickDirectoryButton.addEventListener('click', async () => {
+                try {
+                    const directoryHandle = await window.showDirectoryPicker();
+                    const vfiles = await readDirectoryVideo(directoryHandle);
+                    const gfiles = await readDirectoryGifs(directoryHandle);
+
+                    videofiles = vfiles;
+                    giffiles = gfiles;
+                    TOTAL_VIDEOS = vfiles.length;
+                    pickDirectoryButton.style.display = 'none';
+                    
+                    backgroundAudio = document.getElementById('background-audio');
+                    backgroundAudio.play();
+                    
+                    for (let i = 0; i < TOTAL_VIDEOS; i++) {
+                        const gifName = giffiles[i].name.split('.')[0];
+                        for (let j = 0; j < TOTAL_VIDEOS; j++) {
+                            const videoName = videofiles[j].name.split('.')[0];
+
+                            if (gifName == videoName) {
+                                videoGifMap.set(giffiles[i], videofiles[j]);
+                                break;
+                            }
+                        }
+                    }
+                    init();
+                } catch (error) {
+                    console.error('Error accessing directory:', error);
+                }
+            });
+
+            async function readDirectoryVideo(directoryHandle) {
+                const files = [];
+                const gif = [];
+                for await (const [name, handle] of directoryHandle.entries()) {
+                    if (handle.kind === 'file') {
+                        const file = await handle.getFile();
+                        const extension = file.name.split('.').pop().toLowerCase();
+                        if(extension=='mp4')
+                            files.push(file);
+                    }
+                }
+                return files;
+            }
+
+            async function readDirectoryGifs(directoryHandle) {
+                const files = [];
+                for await (const [name, handle] of directoryHandle.entries()) {
+                    if (handle.kind === 'file') {
+                        const file = await handle.getFile();
+                        const extension = file.name.split('.').pop().toLowerCase();
+                        if(extension=='gif')
+                            files.push(file);
+                    }
+                }
+                return files;
+            }
+
+
+        } else {
+            document.body.innerHTML = '<p>Your browser does not support the File System Access API.</p>';
+        }
+
+        function init() {
+            const output = document.getElementById('output');
+            createTiles(output);
+            
+            window.addEventListener('resize', () => {
+                repositionTiles(output);
+            });
+        }
+
+        function repositionTiles(container) {
+            var layout = calculateGridLayout(container);
+
+            tiles.forEach((tile) => {
+                var row = parseInt(tile.dataset.row);
+                var col = parseInt(tile.dataset.col);
+
+                // Calculate new position for each tile
+                var baseX = layout.marginX + col * (layout.tileWidth + layout.spacingX);
+                var baseY = layout.marginY + row * (layout.tileHeight + layout.spacingY);
+                var maxOffsetX = layout.tileWidth * 0.1;
+                var maxOffsetY = layout.tileHeight * 0.1;
+                var randomX = (Math.random() - 0.5) * 2 * maxOffsetX;
+                var randomY = (Math.random() - 0.5) * 2 * maxOffsetY;
+                var posX = baseX + randomX;
+                var posY = baseY + randomY;
+
+                tile.style.left = posX + 'px';
+                tile.style.top = posY + 'px';
+            });
+        }
+
+        function calculateGridLayout(container) {
+            var containerWidth = container.offsetWidth;
+            var containerHeight = container.offsetHeight;
+
+            // fixed dimensions for each tile
+            var tileWidth = 100;
+            var tileHeight = 178;
+
+            // margins around the grid
+            var marginX = containerWidth * 0.05;
+            var marginY = containerHeight * 0.05;
+
+            // calculate spacing between tiles
+            var availableWidth = containerWidth - (marginX * 2);
+            var availableHeight = containerHeight - (marginY * 2);
+            var spacingX = (availableWidth - tileWidth * COLS) / (COLS - 1);
+            var spacingY = (availableHeight - tileHeight * ROWS) / (ROWS - 1);
+
+            return { marginX, marginY, spacingX, spacingY, tileWidth, tileHeight };
+
+        }
+
+        function createTiles(container) {
+            let videoNumber = 0;
+            const layout = calculateGridLayout(container);
+            tiles = [];
+            container.innerHTML = '';
+
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    var tile = document.createElement('div');
+                    tile.className = 'phone-tile';
+
+                    // Calculate tile position
+                    var baseX = layout.marginX + col * (layout.tileWidth + layout.spacingX);
+                    var baseY = layout.marginY + row * (layout.tileHeight + layout.spacingY);
+
+                    // Add slight random offset for a natural look
+                    var maxOffsetX = layout.tileWidth * 0.1;
+                    var maxOffsetY = layout.tileHeight * 0.1;
+                    var randomX = (Math.random() - 0.5) * 4 * maxOffsetX; // change this for randomness / tilt 
+                    var randomY = (Math.random() - 0.5) * 4 * maxOffsetY; // and this
+                    var posX = baseX + randomX;
+                    var posY = baseY + randomY;
+
+                    tile.style.left = posX + 'px';
+                    tile.style.top = posY + 'px';
+
+                    // Randomly rotate each tile
+                    var rotation = (Math.random() - 0.5) * 4; // adding a little tilt 
+                    tile.style.transform = 'rotate(' + rotation + 'deg)';
+                    tile.dataset.rotation = rotation;
+
+                    tile.dataset.row = row;
+                    tile.dataset.col = col;
+
+                    const gifOverlay = document.createElement('img');
+                    const fileHandle = giffiles[videoNumber];
+                    gifOverlay.src = URL.createObjectURL(fileHandle);
+                    gifOverlay.style.width = "100%";
+                    gifOverlay.style.height = "100%"; 
+                    gifOverlay.name = videoNumber;
+
+                    tile.appendChild(gifOverlay);
+                    tile.onclick = function() { enlargeTile(this); };
+                    container.appendChild(tile);
+                    tiles.push(tile);
+
+                    videoNumber = (videoNumber + 1) % TOTAL_VIDEOS;
+                }
+            }
+        }
+
+        function enlargeTile(tile) {
+            if (isTileEnlarged) return;
+            isTileEnlarged = true;
+            
+            tiles.forEach(t => t.style.zIndex = 1);
+            tile.style.zIndex = 1000;
+            tile.classList.add('enlarged');
+
+            tile.dataset.originalLeft = tile.style.left;
+            tile.dataset.originalTop = tile.style.top;
+
+            tile.style.left = '50%';
+            tile.style.top = '50%';
+            tile.style.transform = 'translate(-50%, -50%) scale(4) rotate(0deg)';
+
+            backgroundAudio.pause();
+            const video = document.createElement('video');
+            video.src = URL.createObjectURL(videoGifMap.get(giffiles[tile.querySelector("img").name]));
+            video.currentTime = 0;
+            video.muted = false;
+            video.loop = false;
+
+            video.onended = () => {
+                videoEnded = true;
+                video.remove();
+                resetTiles();
+                resumeBackgroundAudio();
+            };
+
+            setTimeout(() => {
+                video.play();
+            }, 1500); 
+            
+            tile.appendChild(video);
+            selectedTile = tile;
+        }
+
+        function resetTiles() {
+            if (selectedTile) {
+                selectedTile.classList.remove('enlarged');
+                selectedTile.style.left = selectedTile.dataset.originalLeft;
+                selectedTile.style.top = selectedTile.dataset.originalTop;
+                selectedTile.style.transform = 'rotate(' + selectedTile.dataset.rotation + 'deg)';
+            }
+            selectedTile = null;
+            isTileEnlarged = false;
+        }
+
+        function resumeBackgroundAudio() {
+            if (videoEnded) {
+                backgroundAudio.play();
+                videoEnded = false;
+            }
+        }
+    </script>
+</body>
+</html>

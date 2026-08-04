@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+
+# Archives / working copies of the media set.
+# The canonical media lives in final_gifs/ — do not commit zipped duplicates.
+*.zip
+
+# Local exports and scratch renders
+/exports/
+/tmp/
