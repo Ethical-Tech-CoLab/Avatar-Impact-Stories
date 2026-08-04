@@ -35,10 +35,13 @@ def main() -> int:
             missing.append(f"{label}: {ref}")
 
     for story in stories:
-        for key in ("poster", "video"):
+        for key in ("poster", "posterWebp", "video"):
             ref = story.get(key, "")
             if not ref:
-                missing.append(f"{story.get('title', '?')}: empty {key}")
+                # Only the WebP tile is optional; it is a faster alternative to
+                # the GIF, not a replacement for it.
+                if key != "posterWebp":
+                    missing.append(f"{story.get('title', '?')}: empty {key}")
                 continue
             if ref.startswith(("http://", "https://")) or base:
                 continue  # hosted off-site; not ours to verify here

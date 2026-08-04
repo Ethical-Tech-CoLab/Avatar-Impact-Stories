@@ -79,20 +79,24 @@ def discover() -> tuple[list[dict], list[str]]:
         raise SystemExit(f"Media folder not found: {MEDIA_DIR}")
 
     posters = {p.stem: p for p in MEDIA_DIR.glob("*.gif")}
+    modern = {p.stem: p for p in MEDIA_DIR.glob("*.webp")}
     videos = {p.stem: p for p in MEDIA_DIR.glob("*.mp4")}
 
     stories = []
     for stem in sorted(posters.keys() & videos.keys(), key=str.lower):
-        stories.append(
-            {
-                "id": stem,
-                "title": prettify(stem),
-                # URL-encoded because the exports contain spaces, parentheses and
-                # a '#', which a browser would otherwise read as a fragment.
-                "poster": url_for(posters[stem]),
-                "video": url_for(videos[stem]),
-            }
-        )
+        story = {
+            "id": stem,
+            "title": prettify(stem),
+            # URL-encoded because the exports contain spaces, parentheses and
+            # a '#', which a browser would otherwise read as a fragment.
+            "poster": url_for(posters[stem]),
+            "video": url_for(videos[stem]),
+        }
+        # An animated WebP is around a tenth the size of the GIF. The GIF stays
+        # as the fallback for browsers that cannot decode it.
+        if stem in modern:
+            story["posterWebp"] = url_for(modern[stem])
+        stories.append(story)
 
     unpaired = sorted(
         [f"{s}.gif (no matching .mp4)" for s in posters.keys() - videos.keys()]

@@ -93,24 +93,40 @@ var warming = new Set();
 var paused = false;
 var queue = [];
 var draining = false;
+// Lets a warm download be cancelled the instant a story opens. Pausing alone is
+// not enough: a 30 MB file already in flight would keep its connection for as
+// long as it takes to finish, which is exactly the case that made the first tap
+// on a cold kiosk take the best part of a minute to start.
+var inFlight = null;
+// A URL that keeps failing (renamed, 404, too big for the quota) must not be
+// retried forever, or the worker spins on it instead of warming everything else.
+var attempts = Object.create(null);
+var MAX_ATTEMPTS = 3;
 
 function cacheInBackground(cache, key) {
-    if (warming.has(key.url)) return Promise.resolve();
+    if (warming.has(key.url)) return Promise.resolve(false);
     warming.add(key.url);
-    return fetch(key).then(function (response) {
+    var controller = typeof AbortController === 'function' ? new AbortController() : null;
+    inFlight = controller;
+    var options = controller ? { signal: controller.signal } : undefined;
+
+    return fetch(key, options).then(function (response) {
         if (response && response.status === 200) {
-            return cache.put(key, response);
+            return cache.put(key, response).then(function () { return true; });
         }
-        return null;
+        return false;
     }).catch(function () {
-        return null;        // offline, blocked, or out of quota; try again later
-    }).then(function () {
+        return false;       // aborted, offline, blocked, or out of quota
+    }).then(function (stored) {
         warming.delete(key.url);
+        if (inFlight === controller) inFlight = null;
+        return stored;
     });
 }
 
-// One file at a time, and only while nothing is playing. The queue survives a
-// pause, so warming picks up where it left off once the wall is idle again.
+// One file at a time, and only while nothing is playing. Anything not stored —
+// because it was cancelled or simply failed — goes back on the queue, so
+// warming resumes where it left off once the wall is idle again.
 function drainQueue() {
     if (draining || paused || !queue.length) return;
     draining = true;
@@ -118,11 +134,25 @@ function drainQueue() {
     caches.open(CACHE).then(function (cache) {
         var key = new Request(href, { credentials: 'same-origin' });
         return cache.match(key).then(function (hit) {
-            return hit ? null : cacheInBackground(cache, key);
+            return hit ? true : cacheInBackground(cache, key);
         });
     }).catch(function () {
-        return null;
-    }).then(function () {
+        return false;
+    }).then(function (stored) {
+        // If warming was suspended while this was running, the failure is our
+        // own abort rather than a problem with the file.
+        var aborted = paused;
+        if (stored) {
+            delete attempts[href];
+        } else {
+            // A cancelled download does not count against the retry budget:
+            // it was our own doing, not a problem with the file.
+            if (!aborted) attempts[href] = (attempts[href] || 0) + 1;
+            if ((attempts[href] || 0) < MAX_ATTEMPTS
+                    && !warming.has(href) && queue.indexOf(href) === -1) {
+                queue.push(href);
+            }
+        }
         draining = false;
         drainQueue();
     });
@@ -145,27 +175,41 @@ self.addEventListener('fetch', function (event) {
     // Range requests are never matched directly; the cache holds whole files.
     var key = new Request(url.href, { credentials: 'same-origin' });
 
+    // Whole-file requests — the tile GIFs, the poster images, the ambience.
+    // Cache-first, and on a miss the *same* response that goes to the page is
+    // what gets stored. Fetching a second copy for the cache doubles the bytes
+    // on the wire, which is what made the tiles crawl in one at a time.
+    if (!range) {
+        event.respondWith(
+            caches.open(CACHE).then(function (cache) {
+                return cache.match(key).then(function (hit) {
+                    if (hit) return hit;
+                    return fetch(request).then(function (response) {
+                        if (response && response.status === 200 && response.type === 'basic') {
+                            var copy = response.clone();
+                            event.waitUntil(cache.put(key, copy).catch(function () {}));
+                        }
+                        return response;
+                    });
+                });
+            }).catch(function () {
+                return fetch(request);
+            })
+        );
+        return;
+    }
+
+    // Range requests come from <video>. A hit is sliced out of the stored file;
+    // a miss goes straight to the network and nothing is started alongside it.
+    // Pulling the whole file down in parallel would compete with the story
+    // being watched for the handful of connections a browser allows per origin
+    // — that is what caused the stalling and the audio drifting out of sync.
+    // Videos are cached only by the idle warm queue, which runs one file at a
+    // time and stops the moment a story opens.
     event.respondWith(
         caches.open(CACHE).then(function (cache) {
             return cache.match(key).then(function (hit) {
-                if (hit) {
-                    return range ? sliceForRange(hit.clone(), range) : hit;
-                }
-
-                // Cache miss. Do NOT make the viewer wait for the whole file:
-                // blocking a range request on a full download is slower than no
-                // cache at all, and it is exactly what makes the first play of a
-                // story stall. Serve this request straight from the network and
-                // populate the cache alongside it, so the *next* play is local.
-                //
-                // While a story is playing the extra download would compete with
-                // it for the connection budget, so it is queued for later
-                // instead.
-                if (paused) {
-                    if (queue.indexOf(key.url) === -1) queue.push(key.url);
-                } else {
-                    event.waitUntil(cacheInBackground(cache, key));
-                }
+                if (hit) return sliceForRange(hit.clone(), range);
                 return fetch(request);
             });
         }).catch(function () {
@@ -181,6 +225,12 @@ self.addEventListener('message', function (event) {
 
     if (data.type === 'pause') {
         paused = true;
+        // Cancel whatever is downloading now; it will be re-queued and picked
+        // up again when the wall goes idle.
+        if (inFlight) {
+            try { inFlight.abort(); } catch (err) { /* already settled */ }
+            inFlight = null;
+        }
         return;
     }
     if (data.type === 'resume') {
@@ -195,3 +245,4 @@ self.addEventListener('message', function (event) {
     });
     drainQueue();
 });
+

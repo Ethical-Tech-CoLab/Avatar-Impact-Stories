@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
-"""Re-encode the story videos to sane bitrates without visible quality loss.
+"""Re-encode the story videos so they actually play over a real connection.
 
 The source exports are wildly over-encoded for what they contain: single
 talking-head avatars on static backgrounds, delivered at up to 11.4 Mbps. That
 is near Blu-ray bitrate for the easiest content a codec will ever see.
 
-Measured with VMAF against the sources (VMAF >= 95 is the usual threshold for
-"visually indistinguishable"), CRF 18 lands around 95.7-97 while removing
-roughly three quarters of the bytes.
+Two things matter here, and only one of them is file size:
+
+* **Peak bitrate.** A stream only plays smoothly if its bitrate comfortably
+  fits the viewer's connection. Encoding on quality alone (CRF with no cap)
+  left the tallest videos at 4.5 Mbps, which stalls every few seconds on
+  ordinary venue wifi or mobile data and pushes audio out of sync. Every
+  encode is now capped, so the worst case is roughly half a typical
+  connection rather than all of it.
+* **Resolution.** These play in a phone-shaped tile, and full screen on a
+  kiosk. 720 on the short side is the standard bar for talking-head video and
+  is indistinguishable at viewing distance; 1080 simply spends bytes that
+  make the story stall.
 
 Usage:
     python tools/compress_media.py --check     # report only, encodes nothing
@@ -29,9 +38,32 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 ROOT = Path(__file__).resolve().parent.parent
 MEDIA = ROOT / "final_gifs"
 
-CRF = 18          # visually transparent for this content (VMAF ~95-97)
+CRF = 22          # quality floor; the bitrate cap below is what bounds the peak
 PRESET = "medium"
 AUDIO_KBPS = "96k"
+
+# Peak bitrate ceiling. Streaming needs headroom: a stream that exactly fills
+# the connection has none, and rebuffers on the first hiccup. 1.8 Mbps plays
+# comfortably on the ~4 Mbps that a busy venue or a phone realistically gets.
+MAXRATE_K = 1800
+
+# Long and short side limits. 1080x1920 becomes 720x1280; 1920x1080 becomes
+# 1280x720; anything already smaller is left alone.
+MAX_LONG = 1280
+MAX_SHORT = 720
+
+# Talking-head footage gains nothing from 60 fps, and it costs bitrate that
+# would otherwise go to keeping the picture sharp.
+MAX_FPS = 30
+
+
+def target_size(w: int, h: int) -> tuple[int, int]:
+    """Scale factor that respects both limits, rounded to even dimensions."""
+    scale = min(1.0, MAX_LONG / max(w, h), MAX_SHORT / min(w, h))
+    if scale >= 1.0:
+        return w, h
+    # x264 needs even dimensions for yuv420p.
+    return max(2, int(round(w * scale / 2)) * 2), max(2, int(round(h * scale / 2)) * 2)
 
 
 def which(name: str) -> str:
@@ -81,6 +113,8 @@ def main() -> int:
     mode.add_argument("--apply", action="store_true", help="re-encode in place")
     ap.add_argument("--crf", type=int, default=CRF)
     ap.add_argument("--preset", default=PRESET)
+    ap.add_argument("--maxrate", type=int, default=MAXRATE_K,
+                    help="peak video bitrate ceiling in kbps (default %(default)s)")
     ap.add_argument("--keep-originals", metavar="DIR",
                     help="move each original here instead of deleting it")
     args = ap.parse_args()
@@ -105,16 +139,25 @@ def main() -> int:
 
     total = sum(i["size"] for _, i in plans)
     print(f"{len(plans)} videos, {human(total)}\n")
-    print(f"{'file':<44}{'size':>9}{'WxH':>12}{'fps':>5}{'kbps':>7}")
-    print("-" * 80)
+    print(f"{'file':<44}{'size':>9}{'WxH':>12}{'fps':>5}{'Mbps':>7}{'-> WxH':>12}")
+    print("-" * 92)
+    over = []
     for v, i in plans:
         geo = f"{i['w']}x{i['h']}"
+        mbps = (i["size"] * 8 / i["dur"] / 1e6) if i["dur"] else 0
+        tw, th = target_size(i["w"], i["h"])
+        new_geo = f"{tw}x{th}" if (tw, th) != (i["w"], i["h"]) else "-"
+        flag = "  <-- stalls" if mbps * 1000 > args.maxrate else ""
+        if flag:
+            over.append(v.name)
         print(f"{v.name[:43]:<44}{human(i['size']):>9}{geo:>12}"
-              f"{i['fps']:>5.0f}{i['kbps']:>7}")
+              f"{i['fps']:>5.0f}{mbps:>7.2f}{new_geo:>12}{flag}")
 
     if args.check:
-        print(f"\nEstimated result at CRF {args.crf}: roughly {human(total * 0.25)} "
-              f"({human(total)} today).")
+        print(f"\n{len(over)} of {len(plans)} exceed the {args.maxrate} kbps ceiling "
+              f"and are the ones that stall on a real connection.")
+        print(f"Estimated result at CRF {args.crf} with the cap: roughly "
+              f"{human(total * 0.35)} ({human(total)} today).")
         print("Run with --apply to perform the re-encode.")
         return 0
 
@@ -130,9 +173,15 @@ def main() -> int:
     for n, (v, info) in enumerate(plans, 1):
         tmp = v.with_suffix(".compressing.mp4")
         t0 = time.time()
+        tw, th = target_size(info["w"], info["h"])
         cmd = ["ffmpeg", "-y", "-v", "error", "-i", str(v),
                "-c:v", "libx264", "-preset", args.preset, "-crf", str(args.crf),
+               "-maxrate", f"{args.maxrate}k", "-bufsize", f"{args.maxrate * 2}k",
                "-profile:v", "high", "-pix_fmt", "yuv420p"]
+        if (tw, th) != (info["w"], info["h"]):
+            cmd += ["-vf", f"scale={tw}:{th}:flags=lanczos"]
+        if info["fps"] > MAX_FPS + 0.5:
+            cmd += ["-r", str(MAX_FPS)]
         cmd += (["-c:a", "aac", "-b:a", AUDIO_KBPS, "-ac", "1", "-ar", "48000"]
                 if info["audio"] else ["-an"])
         cmd += ["-movflags", "+faststart", str(tmp)]

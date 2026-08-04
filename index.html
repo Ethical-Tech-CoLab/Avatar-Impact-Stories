@@ -60,6 +60,10 @@
         z-index: 2;
     }
 
+    /* display:contents keeps the <picture> wrapper out of the layout entirely,
+       so the img still sizes against the tile exactly as it did before. */
+    .phone-tile picture { display: contents; }
+
     .phone-tile img {
         width: 100%;
         height: 100%;
@@ -321,7 +325,12 @@
         scatter: 0.16,   // max positional jitter, as a fraction of tile size
         gapRatio: 0.16,  // spacing between tiles, as a fraction of tile size
         tilt: 4,         // max rotation in degrees, +/-
-        openDelayMs: 120 // pause after the zoom lands before playback starts
+        openDelayMs: 120, // pause after the zoom lands before playback starts
+        // How many stories to pre-download into the browser cache while the
+        // wall is idle. 0 turns it off. A permanently installed kiosk on a
+        // wired network can raise this to the number of stories; on the web,
+        // a few ahead is plenty and keeps playback the priority.
+        warmAhead: 4
     };
 
     var TILE_ASPECT = 100 / 178;   // phone shape
@@ -419,6 +428,7 @@
                 id: story.id,
                 title: story.title,
                 poster: resolve(story.poster),
+                posterWebp: story.posterWebp ? resolve(story.posterWebp) : '',
                 video: resolve(story.video)
             };
         });
@@ -463,10 +473,25 @@
     }
 
     // Warm the cache while the wall is idle, in wall order, so the stories most
-    // likely to be tapped first are the first to become instant. Deliberately
-    // deferred: it must never compete with a story that is already playing.
+    // likely to be tapped first are the first to become instant.
+    //
+    // This is deliberately conservative. The full set of stories is several
+    // hundred megabytes; pulling all of it down in the background is fine for a
+    // kiosk on a wired venue network and actively harmful for someone on a
+    // phone, where it competes with the story they are actually watching and
+    // burns their data. So: only a few stories ahead by default, never on a
+    // metered or slow connection, and never before the tiles themselves have
+    // finished loading.
     function warmCache() {
         if (!swReady) return;
+        if (!config.warmAhead) return;
+
+        var link = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (link) {
+            if (link.saveData) return;
+            if (/(^|-)(2g|slow-2g)$/.test(link.effectiveType || '')) return;
+        }
+
         swReady.then(function (registration) {
             if (!registration || !registration.active) return;
             var urls = tiles.map(function (tile) {
@@ -476,7 +501,7 @@
                 return href && !/^([a-z][a-z0-9+.-]*:)?\/\//i.test(href);
             }).map(function (href) {
                 return new URL(href, location.href).href;
-            });
+            }).slice(0, config.warmAhead);
             if (urls.length) {
                 registration.active.postMessage({ type: 'warm', urls: urls });
             }
@@ -635,7 +660,20 @@
             poster.src = story.poster;
             poster.alt = '';
             poster.decoding = 'async';
-            tile.appendChild(poster);
+
+            if (story.posterWebp) {
+                // <picture> lets the browser pick the WebP and never download
+                // the GIF at all; browsers without WebP still get the GIF.
+                var picture = document.createElement('picture');
+                var source = document.createElement('source');
+                source.type = 'image/webp';
+                source.srcset = story.posterWebp;
+                picture.appendChild(source);
+                picture.appendChild(poster);
+                tile.appendChild(picture);
+            } else {
+                tile.appendChild(poster);
+            }
 
             stage.appendChild(tile);
             tiles.push(tile);
@@ -933,13 +971,41 @@
         var play = ambience.play();
         if (play && typeof play.catch === 'function') play.catch(function () {});
 
-        // Pull the stories into the local cache while nobody is watching, so
-        // the first tap on each phone plays instantly instead of buffering.
-        if ('requestIdleCallback' in window) {
-            requestIdleCallback(warmCache, { timeout: 4000 });
-        } else {
-            setTimeout(warmCache, 2500);
-        }
+        // Pull a few stories into the local cache while nobody is watching, so
+        // the first tap plays instantly instead of buffering. This waits until
+        // the tile animations have finished arriving — starting earlier just
+        // makes the wall itself load slowly, which is the first thing anyone
+        // sees.
+        whenTilesLoaded().then(function () {
+            setTimeout(warmCache, 3000);
+        });
+    }
+
+    // Resolves once every tile image has loaded or failed. Capped, so a single
+    // missing GIF can never keep the cache cold forever.
+    function whenTilesLoaded() {
+        var images = tiles.map(function (tile) {
+            return tile.querySelector('img');
+        }).filter(Boolean);
+        var pending = images.filter(function (img) { return !img.complete; });
+        if (!pending.length) return Promise.resolve();
+
+        return new Promise(function (resolve) {
+            var left = pending.length;
+            var done = false;
+            function tick() {
+                if (done) return;
+                left -= 1;
+                if (left <= 0) { done = true; resolve(); }
+            }
+            pending.forEach(function (img) {
+                img.addEventListener('load', tick, { once: true });
+                img.addEventListener('error', tick, { once: true });
+            });
+            setTimeout(function () {
+                if (!done) { done = true; resolve(); }
+            }, 30000);
+        });
     }
 
     async function boot() {

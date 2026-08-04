@@ -61,6 +61,11 @@ jobs:
             if [ -f "$f" ]; then cp "$f" _site/; fi
           done
           cp final_gifs/*.gif _site/final_gifs/
+          # Animated WebP tiles: a tenth the size of the GIFs, which is the
+          # difference between the wall loading quickly and trickling in.
+          if compgen -G "final_gifs/*.webp" > /dev/null; then
+            cp final_gifs/*.webp _site/final_gifs/
+          fi
 
           if [ -f stories.web.json ]; then
             echo "Using stories.web.json (media hosted off-site)."
