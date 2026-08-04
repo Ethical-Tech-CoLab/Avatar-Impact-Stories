@@ -316,13 +316,27 @@
                 }
             });
         }
+
+        // Media does not have to sit next to the page. GitHub Pages cannot serve
+        // Git LFS files, so a published build points mediaBase at wherever the
+        // large media actually lives (release assets, a CDN, a storage bucket).
+        var base = typeof data.mediaBase === 'string' ? data.mediaBase : '';
+        if (base && base.slice(-1) !== '/') base += '/';
+
+        function resolve(path) {
+            if (!path) return path;
+            // Already absolute (https://…, //…, /…): leave it alone.
+            if (/^([a-z][a-z0-9+.-]*:)?\/\//i.test(path) || path.charAt(0) === '/') return path;
+            return base + path;
+        }
+
         if (data.background) {
             // Paths in the manifest are already URL-encoded; do not re-encode.
             if (data.background.image) {
-                stage.style.backgroundImage = 'url("' + data.background.image + '")';
+                stage.style.backgroundImage = 'url("' + resolve(data.background.image) + '")';
             }
             if (data.background.audio) {
-                ambience.src = data.background.audio;
+                ambience.src = resolve(data.background.audio);
             }
         }
 
@@ -339,7 +353,15 @@
         if (usable.length === 0) {
             throw new Error('stories.json contains no story with both a poster and a video.');
         }
-        return usable;
+
+        return usable.map(function (story) {
+            return {
+                id: story.id,
+                title: story.title,
+                poster: resolve(story.poster),
+                video: resolve(story.video)
+            };
+        });
     }
 
     function showError(message, detail) {

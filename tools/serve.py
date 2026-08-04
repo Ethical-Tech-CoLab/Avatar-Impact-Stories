@@ -29,6 +29,12 @@ MANIFEST = ROOT / "stories.json"
 DEFAULT_GRID = {"rows": 5, "cols": 6, "scatter": 0.16, "gapRatio": 0.16, "tilt": 4}
 DEFAULT_BACKGROUND = {"image": "Crowd.png", "audio": "background%20testing.mp3"}
 
+# Some exports have non-ASCII characters in their names; the default Windows
+# console encoding cannot print them.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
 
 def url_for(path: Path) -> str:
     """Relative, URL-encoded path usable directly as a src attribute."""

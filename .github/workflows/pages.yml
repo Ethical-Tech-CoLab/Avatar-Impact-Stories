@@ -1,0 +1,103 @@
+name: Deploy demo to GitHub Pages
+
+# GitHub Pages cannot serve Git LFS files directly, and the full media set is
+# far larger than the 1 GB Pages limit. This workflow works around both:
+#
+#   * actions/checkout resolves LFS, so the artifact contains real bytes rather
+#     than pointer files;
+#   * only the page and the small GIF posters (~80 MB) are published, while the
+#     MP4s stream from release assets referenced by stories.web.json.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - stories.web.json
+      - final_gifs/**
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out with LFS media
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Fetch LFS objects
+        run: git lfs pull --include "final_gifs/*.gif,Crowd.png,background testing.mp3"
+
+      - name: Assemble the site
+        run: |
+          set -euo pipefail
+
+          if [ ! -f stories.web.json ]; then
+            echo "::error::stories.web.json is missing. Run 'python tools/publish_web.py --upload' and commit the result."
+            exit 1
+          fi
+
+          mkdir -p _site/final_gifs
+          cp index.html _site/
+          cp Crowd.png "background testing.mp3" _site/
+          cp final_gifs/*.gif _site/final_gifs/
+
+          # The published manifest points at release-hosted videos.
+          cp stories.web.json _site/stories.json
+
+          # Pages would otherwise run the whole thing through Jekyll and drop
+          # files it does not recognise.
+          touch _site/.nojekyll
+
+          echo "Site contents:"
+          du -sh _site
+          find _site -maxdepth 1 -printf '  %f\n'
+
+      - name: Fail if any media is still an LFS pointer
+        run: |
+          set -euo pipefail
+          bad=0
+          for f in _site/final_gifs/*.gif _site/Crowd.png; do
+            if [ "$(head -c 7 "$f")" = "version" ]; then
+              echo "::error::$f is still a Git LFS pointer, not real media."
+              bad=1
+            fi
+          done
+          if [ "$bad" -ne 0 ]; then
+            exit 1
+          fi
+          echo "All media resolved to real files."
+
+      - name: Check the artifact fits the Pages limit
+        run: |
+          bytes=$(du -sb _site | cut -f1)
+          echo "Artifact is $((bytes / 1000000)) MB."
+          if [ "$bytes" -gt 1000000000 ]; then
+            echo "::error::Artifact exceeds the 1 GB GitHub Pages limit."
+            exit 1
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
