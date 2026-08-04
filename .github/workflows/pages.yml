@@ -17,6 +17,7 @@ on:
     branches: [main]
     paths:
       - index.html
+      - about.html
       - sw.js
       - stories.json
       - stories.web.json
@@ -53,7 +54,7 @@ jobs:
           set -euo pipefail
 
           mkdir -p _site/final_gifs
-          cp index.html sw.js _site/
+          cp index.html about.html sw.js _site/
           cp Crowd.png "background testing.mp3" _site/
           # Whatever drop-in background is in use, if any.
           for f in background.png background.jpg background.jpeg background.webp \

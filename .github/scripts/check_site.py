@@ -6,10 +6,38 @@ listed in the manifest whose media never made it into the artifact.
 """
 import json
 import os
+import re
 import sys
 import urllib.parse
 
 SITE = "_site"
+PAGES = ("index.html", "about.html")
+
+
+def check_pages() -> list:
+    """Every page must ship, and their links to each other must resolve.
+
+    The provenance page is reachable only by a link from the wall, so a
+    missing file or a stale href is invisible until a visitor clicks it.
+    """
+    problems = []
+    for page in PAGES:
+        if not os.path.isfile(os.path.join(SITE, page)):
+            problems.append(f"page missing from the artifact: {page}")
+
+    for page in PAGES:
+        path = os.path.join(SITE, page)
+        if not os.path.isfile(path):
+            continue
+        with open(path, encoding="utf-8") as fh:
+            html = fh.read()
+        for href in re.findall(r'href="([^"#?]+)"', html):
+            if href.startswith(("http://", "https://", "mailto:", "//", "data:")):
+                continue
+            target = os.path.join(SITE, urllib.parse.unquote(href))
+            if not os.path.isfile(target):
+                problems.append(f"{page} links to a missing file: {href}")
+    return problems
 
 
 def main() -> int:
@@ -22,7 +50,7 @@ def main() -> int:
         return 1
 
     base = manifest.get("mediaBase", "")
-    missing = []
+    missing = check_pages()
     checked = 0
 
     # The backdrop is easy to forget when swapping it, and a missing one leaves
@@ -51,13 +79,13 @@ def main() -> int:
                 missing.append(ref)
 
     if missing:
-        print("::error::The manifest references files that were not published:")
+        print("::error::The published site is incomplete:")
         for ref in missing:
             print(f"  {ref}")
         return 1
 
     where = "off-site" if base else f"{checked} local files"
-    print(f"All {len(stories)} stories resolved ({where}).")
+    print(f"All {len(stories)} stories resolved ({where}). Pages: {', '.join(PAGES)}.")
     return 0
 
 

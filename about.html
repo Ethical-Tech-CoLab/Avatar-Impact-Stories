@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How this was made &middot; Many Voices</title>
+<meta name="description" content="How the Many Voices avatar testimonies were researched, written and generated — the tooling, the timing, and the ethics.">
+<style>
+    * { box-sizing: border-box; }
+
+    html, body {
+        margin: 0;
+        background: #0b0b0c;
+        color: #e9e9ec;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        font-size: 17px;
+        line-height: 1.65;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    a { color: #9ecbff; }
+    a:hover { color: #c9e2ff; }
+
+    .wrap {
+        max-width: 46rem;
+        margin: 0 auto;
+        padding: 2.5rem 1.35rem 5rem;
+    }
+
+    header { margin-bottom: 3rem; }
+
+    .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: .14em;
+        font-size: .72rem;
+        color: rgba(255, 255, 255, .45);
+        margin: 0 0 .75rem;
+    }
+
+    h1 {
+        font-size: clamp(1.9rem, 5vw, 2.6rem);
+        line-height: 1.15;
+        margin: 0 0 1rem;
+        font-weight: 600;
+    }
+
+    h2 {
+        font-size: 1.3rem;
+        margin: 3rem 0 .85rem;
+        font-weight: 600;
+        padding-top: 1.75rem;
+        border-top: 1px solid rgba(255, 255, 255, .1);
+    }
+
+    h3 {
+        font-size: 1.02rem;
+        margin: 1.9rem 0 .5rem;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    p { margin: 0 0 1.1rem; }
+
+    .lede {
+        font-size: 1.12rem;
+        color: rgba(255, 255, 255, .82);
+    }
+
+    blockquote {
+        margin: 1.5rem 0;
+        padding: .2rem 0 .2rem 1.15rem;
+        border-left: 3px solid rgba(158, 203, 255, .5);
+        color: rgba(255, 255, 255, .78);
+        font-style: italic;
+    }
+    blockquote cite { display: block; margin-top: .6rem; font-size: .85rem; font-style: normal; color: rgba(255, 255, 255, .5); }
+
+    ul { margin: 0 0 1.1rem; padding-left: 1.2rem; }
+    li { margin-bottom: .7rem; }
+
+    .callout {
+        background: rgba(255, 255, 255, .045);
+        border: 1px solid rgba(255, 255, 255, .1);
+        border-radius: 10px;
+        padding: 1.15rem 1.3rem;
+        margin: 1.75rem 0;
+    }
+    .callout p:last-child { margin-bottom: 0; }
+    .callout strong { color: #fff; }
+
+    .dated {
+        border-left: 3px solid rgba(255, 200, 120, .55);
+        background: rgba(255, 200, 120, .06);
+        border-color: rgba(255, 200, 120, .18);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.5rem 0;
+        font-size: .93rem;
+    }
+    th, td {
+        text-align: left;
+        padding: .6rem .7rem;
+        border-bottom: 1px solid rgba(255, 255, 255, .1);
+        vertical-align: top;
+    }
+    th { color: rgba(255, 255, 255, .55); font-weight: 600; white-space: nowrap; }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .75rem;
+        margin: 2rem 0 0;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: .7rem 1.3rem;
+        border-radius: 999px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: .95rem;
+    }
+    .btn-primary { background: #fff; color: #111; }
+    .btn-primary:hover { background: #e4e4e8; color: #111; }
+    .btn-ghost { border: 1px solid rgba(255, 255, 255, .28); color: #e9e9ec; }
+    .btn-ghost:hover { border-color: rgba(255, 255, 255, .5); color: #fff; }
+
+    footer {
+        margin-top: 3.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, .1);
+        font-size: .87rem;
+        color: rgba(255, 255, 255, .5);
+    }
+
+    .back {
+        display: inline-block;
+        margin-bottom: 2rem;
+        font-size: .9rem;
+        text-decoration: none;
+        color: rgba(255, 255, 255, .6);
+    }
+    .back:hover { color: #fff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a class="back" href="index.html">&larr; Back to the wall</a>
+
+<header>
+    <p class="eyebrow">Many Voices &middot; Avatar Impact Stories</p>
+    <h1>How this was made</h1>
+    <p class="lede">
+        Every presenter on this wall is synthetic. Every account they give is not. This page
+        explains where the stories came from, who made them, what tools were used and when —
+        and where the boundaries were drawn.
+    </p>
+</header>
+
+<h2>Why synthetic presenters</h2>
+
+<p>
+    Survivor testimony is the most persuasive evidence there is, and it is also the most
+    dangerous thing a survivor can give. Publishing a real face alongside an account of
+    trafficking or forced labour can expose someone to retaliation from the very people they
+    escaped.
+</p>
+
+<p>
+    The conventional workarounds all cost the thing that makes testimony land. A silhouette
+    removes the face. Voice modulation removes the voice. An actor's dramatic reading replaces
+    the person entirely. A synthetic presenter breaks that trade-off: the account stays
+    first-person and human, while the identity behind it stays protected.
+</p>
+
+<blockquote>
+    The project leverages generative AI to create realistic avatars that deliver authentic
+    survivor testimonies. This technology allows for the sharing of crucial, attention-grabbing
+    stories while protecting survivors' identities, demonstrating how AI can be ethically applied
+    to address pressing social issues and create empathy without compromising safety or dignity.
+    <cite>— <a href="https://www.generativeaiforgood.com/">Generative AI for Good</a></cite>
+</blockquote>
+
+<p>
+    "Many Voices" was inspired by the Generative AI for Good programme and the work of
+    <a href="https://www.generativeaiforgood.com/">Shiran Mlamdovsky Somech</a>, whose advocacy
+    for applying generative AI to social impact is the reason this project exists.
+</p>
+
+<h2>When this was made</h2>
+
+<p>
+    The avatars were generated in <strong>Fall 2025</strong> using
+    <a href="https://www.d-id.com/">D-ID</a>, which drives a photorealistic presenter from a
+    still image and a voice track.
+</p>
+
+<div class="callout dated">
+    <p>
+        <strong>The date matters more than it normally would.</strong> Avatar generation is moving
+        fast enough that a few months is a visible generation gap. What you are watching is a
+        snapshot of what this tooling could do in late 2025 — not a demonstration of the current
+        state of the art.
+    </p>
+    <p>
+        That shows up in specific places: lip-sync drifts on harder consonants, head and hand
+        movement is limited, gaze is fixed, and emotional range is narrow compared with what
+        newer models produce. Those artefacts are left in deliberately. They are part of the
+        record of when this was made, and they help a viewer tell that the presenter is
+        synthetic.
+    </p>
+</div>
+
+<table>
+    <tr><th>Programme</th><td>Generative AI for Good, Fall 2025 cohort</td></tr>
+    <tr><th>Advisor</th><td>Shiran Mlamdovsky Somech</td></tr>
+    <tr><th>Avatar tooling</th><td>D-ID, as available in Fall 2025</td></tr>
+    <tr><th>Stories</th><td>21, running roughly 40 seconds to 2 minutes each</td></tr>
+    <tr><th>Subjects</th><td>Human trafficking, forced and child labour, domestic violence, forced conscription, cobalt mining</td></tr>
+</table>
+
+<h2>How the students made them</h2>
+
+<p>
+    The work was done by students in the Fall 2025 cohort, advised by Shiran at Generative AI for
+    Good. They were taught not just the tooling but the craft and the ethics around it. Each
+    story went through the same path.
+</p>
+
+<h3>1. Researching the account</h3>
+<p>
+    Students sourced survivor accounts and other first-person material, and stayed faithful to
+    them. The requirement was that the testimony be traceable back to a real source — a
+    synthetic presenter is a way to protect a real account, not a licence to compose one.
+</p>
+
+<h3>2. Cutting it to an avatar's attention budget</h3>
+<p>
+    An avatar holds attention for a much shorter window than a human speaker does. Testimony had
+    to be tightened to that budget without flattening it — which mostly meant cutting context and
+    keeping specifics, since it is the concrete detail that carries a first-person account. The
+    finished stories run roughly 40 seconds to 2 minutes.
+</p>
+
+<h3>3. Matching the delivery to the community</h3>
+<p>
+    Presentation, language and delivery were matched to the community a story comes from rather
+    than defaulting to a Western frame. The wall includes stories in and from multiple languages
+    and regions. The presenter's appearance and voice were treated as part of the testimony's
+    accuracy, not as a styling choice.
+</p>
+
+<h3>4. Generating and directing the avatar</h3>
+<p>
+    Students learned to generate and direct a presenter in D-ID, and — just as importantly — the
+    practical limits of what one can carry convincingly. Longer scripts, rapid emotional shifts
+    and complex names were where the Fall 2025 tooling showed its seams, so scripts were written
+    with those limits in mind.
+</p>
+
+<h3>5. Producing the pair</h3>
+<p>
+    Each finished story is a matched pair: a short silent loop that sits on the idle wall, and
+    the full video with audio that plays when a visitor taps it. Nothing on the wall plays sound
+    until someone chooses it.
+</p>
+
+<h2>Where the lines were drawn</h2>
+
+<ul>
+    <li><strong>Represent, don't invent.</strong> Avatars deliver real accounts. They are not
+        used to generate testimony that nobody gave.</li>
+    <li><strong>Never impersonate the survivor.</strong> The presenter is not a likeness of the
+        person whose account is being told, and is not presented as them.</li>
+    <li><strong>Always disclose.</strong> An <strong>AI</strong> marker sits over every video for
+        its full duration. A viewer should never have to guess whether a presenter is real.</li>
+    <li><strong>Keep the account traceable.</strong> Faithfulness to the source material was a
+        condition of a story being included, not an aspiration.</li>
+    <li><strong>Many voices, not one.</strong> The stories are presented together so that no
+        single account has to stand in for an entire problem.</li>
+</ul>
+
+<div class="callout">
+    <p>
+        <strong>A note on the content.</strong> These accounts describe trafficking, forced and
+        child labour, violence and conscription. They are presented plainly, without dramatisation.
+        Please take care.
+    </p>
+</div>
+
+<h2>How the wall itself works</h2>
+
+<p>
+    The wall is built for a room, not a browser tab. Tiles loop silently over a crowd backdrop —
+    the visual argument being that these accounts are everywhere and mostly unheard. Nothing
+    plays until someone chooses it, which makes engagement a deliberate act rather than something
+    autoplayed at a passer-by. When a story ends, the wall returns to its idle state and waits.
+</p>
+
+<p>
+    The source, the build notes and the full technical write-up — including how the media is
+    encoded and cached so stories start quickly on an ordinary connection — are in the
+    repository.
+</p>
+
+<div class="actions">
+    <a class="btn btn-primary" href="index.html">Open the wall</a>
+    <a class="btn btn-ghost" href="https://github.com/Ethical-Tech-CoLab/Avatar-Impact-Stories">View the source</a>
+    <a class="btn btn-ghost" href="https://www.generativeaiforgood.com/">Generative AI for Good</a>
+</div>
+
+<footer>
+    <p>
+        Many Voices &middot; Avatar Impact Stories &mdash; an
+        <a href="https://github.com/Ethical-Tech-CoLab">Ethical Tech CoLab</a> project, with the
+        Generative AI for Good Fall 2025 cohort. Avatars generated with D-ID in Fall 2025.
+    </p>
+</footer>
+
+</div>
+</body>
+</html>

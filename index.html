@@ -204,6 +204,35 @@
 
     #close:hover { background: rgba(255, 255, 255, .24); }
 
+    /* Provenance link. Anyone who has just watched a story will want to know
+       how it was made, so the way there stays on screen while the wall is
+       idle. It gets out of the way entirely once a story opens. */
+    #about-link {
+        position: fixed;
+        right: 20px;
+        bottom: 18px;
+        z-index: 900;
+        padding: .5rem .95rem;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, .45);
+        border: 1px solid rgba(255, 255, 255, .22);
+        color: rgba(255, 255, 255, .82);
+        font-size: .82rem;
+        text-decoration: none;
+        backdrop-filter: blur(4px);
+        transition: opacity 240ms linear, background 160ms linear, color 160ms linear;
+    }
+
+    #about-link:hover {
+        background: rgba(0, 0, 0, .7);
+        color: #fff;
+    }
+
+    #overlay.is-open ~ #about-link {
+        opacity: 0;
+        pointer-events: none;
+    }
+
     /* ---------- start / error screens ---------- */
 
     .screen {
@@ -254,8 +283,9 @@
 
     button.primary:hover { transform: translateY(-2px); }
 
-    button.link {
+    button.link, a.link {
         font: inherit;
+        display: inline-block;
         margin-top: 1.25rem;
         background: none;
         border: 0;
@@ -263,6 +293,8 @@
         text-decoration: underline;
         cursor: pointer;
     }
+
+    a.link:hover { color: rgba(255, 255, 255, .85); }
 
     #error-detail {
         margin-top: 1rem;
@@ -290,6 +322,7 @@
     </div>
 </div>
 <button id="close" hidden aria-label="Close story">&times;</button>
+<a id="about-link" href="about.html">How this was made</a>
 
 <audio id="ambience" loop preload="auto"></audio>
 
@@ -302,6 +335,7 @@
             labour, and violence &mdash; please take care.
         </p>
         <button class="primary" id="start-button">Begin</button>
+        <div><a class="link" href="about.html">How this was made</a></div>
         <div><button class="link" id="picker-button" hidden>Load stories from a folder instead</button></div>
     </div>
 </section>
