@@ -336,15 +336,18 @@
         </p>
         <button class="primary" id="start-button">Begin</button>
         <div><a class="link" href="about.html">How this was made</a></div>
-        <div><button class="link" id="picker-button" hidden>Load stories from a folder instead</button></div>
     </div>
 </section>
 
+<!-- The folder picker lives here, not on the start screen: it is only ever
+     offered when the manifest failed to load, and showError() hides the start
+     screen. On the start screen it was unreachable. -->
 <section class="screen" id="error-screen" hidden>
     <div>
         <h1>Can't load the stories</h1>
         <p id="error-message"></p>
         <button class="primary" id="retry-button">Try again</button>
+        <div><button class="link" id="picker-button" hidden>Load stories from a folder instead</button></div>
         <div id="error-detail"></div>
     </div>
 </section>
@@ -1047,6 +1050,8 @@
         try {
             stories = await loadManifest();
             startButton.disabled = false;
+            // A retry that succeeds should not leave the fallback offered.
+            pickerButton.hidden = true;
         } catch (err) {
             console.error(err);
             if (location.protocol === 'file:') {
