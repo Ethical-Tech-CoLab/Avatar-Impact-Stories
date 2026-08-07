@@ -12,7 +12,7 @@ from playwright.async_api import async_playwright
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-ROOT = Path(r"c:\Dev\Kiosk - Many voices - final version")
+ROOT = Path(__file__).resolve().parent.parent
 PORT = 8078
 URL = f"http://localhost:{PORT}"
 results = []
@@ -241,4 +241,3 @@ async def main():
 
 
 sys.exit(asyncio.run(main()))
-

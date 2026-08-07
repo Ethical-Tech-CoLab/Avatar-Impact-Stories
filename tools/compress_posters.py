@@ -15,6 +15,7 @@ a tenth of the bytes. The GIFs stay in place as a fallback, wired up through a
 Usage:
     python tools/compress_posters.py --check     # report only
     python tools/compress_posters.py --apply     # write the .webp files
+    python tools/compress_posters.py --apply "New Story.gif"
 """
 from __future__ import annotations
 
@@ -56,11 +57,17 @@ def main() -> int:
     mode.add_argument("--apply", action="store_true", help="write the .webp files")
     ap.add_argument("--fps", type=int, default=FPS)
     ap.add_argument("--quality", type=int, default=QUALITY)
+    ap.add_argument("files", nargs="*", metavar="GIF",
+                    help="specific files in final_gifs (default: every GIF)")
     args = ap.parse_args()
 
     which("ffmpeg")
 
-    gifs = sorted(MEDIA.glob("*.gif"))
+    gifs = ([MEDIA / Path(name).name for name in args.files]
+            if args.files else sorted(MEDIA.glob("*.gif")))
+    invalid = [g.name for g in gifs if g.suffix.lower() != ".gif" or not g.is_file()]
+    if invalid:
+        sys.exit(f"GIF file(s) not found in {MEDIA}: {', '.join(invalid)}")
     if not gifs:
         sys.exit(f"No .gif files in {MEDIA}")
 

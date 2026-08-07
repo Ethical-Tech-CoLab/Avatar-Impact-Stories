@@ -13,147 +13,168 @@
   "stories": [
     {
       "id": "Adam (Child Labour) - Alexa",
-      "title": "Adam (Child Labour) - Alexa",
+      "title": "Adam - child laborer",
       "poster": "final_gifs/Adam%20%28Child%20Labour%29%20-%20Alexa.gif",
       "video": "final_gifs/Adam%20%28Child%20Labour%29%20-%20Alexa.mp4",
       "posterWebp": "final_gifs/Adam%20%28Child%20Labour%29%20-%20Alexa.webp"
     },
     {
       "id": "Amala (Child Labour) - Alexa",
-      "title": "Amala (Child Labour) - Alexa",
+      "title": "Amala - child laborer",
       "poster": "final_gifs/Amala%20%28Child%20Labour%29%20-%20Alexa.gif",
       "video": "final_gifs/Amala%20%28Child%20Labour%29%20-%20Alexa.mp4",
       "posterWebp": "final_gifs/Amala%20%28Child%20Labour%29%20-%20Alexa.webp"
     },
     {
+      "id": "Amina - Nairobi",
+      "title": "Amina - Nairobi",
+      "poster": "final_gifs/Amina%20-%20Nairobi.gif",
+      "video": "final_gifs/Amina%20-%20Nairobi.mp4",
+      "posterWebp": "final_gifs/Amina%20-%20Nairobi.webp"
+    },
+    {
       "id": "arabic",
-      "title": "arabic",
+      "title": "Arabic - victim",
       "poster": "final_gifs/arabic.gif",
       "video": "final_gifs/arabic.mp4",
       "posterWebp": "final_gifs/arabic.webp"
     },
     {
       "id": "Congo (Cobalt Mines)",
-      "title": "Congo (Cobalt Mines)",
+      "title": "Congo - cobalt mines",
       "poster": "final_gifs/Congo%20%28Cobalt%20Mines%29.gif",
       "video": "final_gifs/Congo%20%28Cobalt%20Mines%29.mp4",
       "posterWebp": "final_gifs/Congo%20%28Cobalt%20Mines%29.webp"
     },
     {
       "id": "Domestic Violence 1 - Smita Samanta",
-      "title": "Domestic Violence 1 - Smita Samanta",
+      "title": "Domestic violence victim",
       "poster": "final_gifs/Domestic%20Violence%201%20-%20Smita%20Samanta.gif",
       "video": "final_gifs/Domestic%20Violence%201%20-%20Smita%20Samanta.mp4",
       "posterWebp": "final_gifs/Domestic%20Violence%201%20-%20Smita%20Samanta.webp"
     },
     {
       "id": "Domestic Violence 2 - Smita Samanta",
-      "title": "Domestic Violence 2 - Smita Samanta",
+      "title": "Domestic violence victim",
       "poster": "final_gifs/Domestic%20Violence%202%20-%20Smita%20Samanta.gif",
       "video": "final_gifs/Domestic%20Violence%202%20-%20Smita%20Samanta.mp4",
       "posterWebp": "final_gifs/Domestic%20Violence%202%20-%20Smita%20Samanta.webp"
     },
     {
       "id": "Domestic Violence 3 - Smita Samanta",
-      "title": "Domestic Violence 3 - Smita Samanta",
+      "title": "Domestic violence victim",
       "poster": "final_gifs/Domestic%20Violence%203%20-%20Smita%20Samanta.gif",
       "video": "final_gifs/Domestic%20Violence%203%20-%20Smita%20Samanta.mp4",
       "posterWebp": "final_gifs/Domestic%20Violence%203%20-%20Smita%20Samanta.webp"
     },
     {
       "id": "Dorothy_s Story - Nate",
-      "title": "Dorothy's Story - Nate",
+      "title": "Dorothy's story - survivor",
       "poster": "final_gifs/Dorothy_s%20Story%20-%20Nate.gif",
       "video": "final_gifs/Dorothy_s%20Story%20-%20Nate.mp4",
       "posterWebp": "final_gifs/Dorothy_s%20Story%20-%20Nate.webp"
     },
     {
       "id": "Forced Labor - Celine R.",
-      "title": "Forced Labor - Celine R.",
+      "title": "Forced labor survivor",
       "poster": "final_gifs/Forced%20Labor%20-%20Celine%20R..gif",
       "video": "final_gifs/Forced%20Labor%20-%20Celine%20R..mp4",
       "posterWebp": "final_gifs/Forced%20Labor%20-%20Celine%20R..webp"
     },
     {
       "id": "George (church)",
-      "title": "George (church)",
+      "title": "George - church abuse",
       "poster": "final_gifs/George%20%28church%29.gif",
       "video": "final_gifs/George%20%28church%29.mp4",
       "posterWebp": "final_gifs/George%20%28church%29.webp"
     },
     {
       "id": "Human Trafficking - Smita Samanta",
-      "title": "Human Trafficking - Smita Samanta",
+      "title": "Human trafficking survivor",
       "poster": "final_gifs/Human%20Trafficking%20-%20Smita%20Samanta.gif",
       "video": "final_gifs/Human%20Trafficking%20-%20Smita%20Samanta.mp4",
       "posterWebp": "final_gifs/Human%20Trafficking%20-%20Smita%20Samanta.webp"
     },
     {
       "id": "Jaoanese (Forced Conscription)",
-      "title": "Jaoanese (Forced Conscription)",
+      "title": "Jaonese - forced conscription",
       "poster": "final_gifs/Jaoanese%20%28Forced%20Conscription%29.gif",
       "video": "final_gifs/Jaoanese%20%28Forced%20Conscription%29.mp4",
       "posterWebp": "final_gifs/Jaoanese%20%28Forced%20Conscription%29.webp"
     },
     {
       "id": "Kayla (sex trafficking)",
-      "title": "Kayla (sex trafficking)",
+      "title": "Kayla - sex trafficking survivor",
       "poster": "final_gifs/Kayla%20%28sex%20trafficking%29.gif",
       "video": "final_gifs/Kayla%20%28sex%20trafficking%29.mp4",
       "posterWebp": "final_gifs/Kayla%20%28sex%20trafficking%29.webp"
     },
     {
       "id": "Latin Kings (Conscription)",
-      "title": "Latin Kings (Conscription)",
+      "title": "Latin Kings - forced conscription",
       "poster": "final_gifs/Latin%20Kings%20%28Conscription%29.gif",
       "video": "final_gifs/Latin%20Kings%20%28Conscription%29.mp4",
       "posterWebp": "final_gifs/Latin%20Kings%20%28Conscription%29.webp"
     },
     {
+      "id": "Omar - Cobalt mine",
+      "title": "Omar - cobalt mine survivor",
+      "poster": "final_gifs/Omar%20-%20Cobalt%20mine.gif",
+      "video": "final_gifs/Omar%20-%20Cobalt%20mine.mp4",
+      "posterWebp": "final_gifs/Omar%20-%20Cobalt%20mine.webp"
+    },
+    {
+      "id": "Samiya - Bangladesh",
+      "title": "Samiya - child laborer, Bangladesh",
+      "poster": "final_gifs/Samiya%20-%20Bangladesh.gif",
+      "video": "final_gifs/Samiya%20-%20Bangladesh.mp4",
+      "posterWebp": "final_gifs/Samiya%20-%20Bangladesh.webp"
+    },
+    {
       "id": "Survivor - Forced Labor #4",
-      "title": "Survivor - Forced Labor #4",
+      "title": "Survivor - forced labor",
       "poster": "final_gifs/Survivor%20-%20Forced%20Labor%20%234.gif",
       "video": "final_gifs/Survivor%20-%20Forced%20Labor%20%234.mp4",
       "posterWebp": "final_gifs/Survivor%20-%20Forced%20Labor%20%234.webp"
     },
     {
       "id": "The True Cost of Your Chocolate ΓÇô A Cocoa Farmer Speaks copy",
-      "title": "The True Cost of Your Chocolate ΓÇô A Cocoa Farmer Speaks",
+      "title": "Cocao farmer - the true cost of chocolate",
       "poster": "final_gifs/The%20True%20Cost%20of%20Your%20Chocolate%20%CE%93%C3%87%C3%B4%20A%20Cocoa%20Farmer%20Speaks%20copy.gif",
       "video": "final_gifs/The%20True%20Cost%20of%20Your%20Chocolate%20%CE%93%C3%87%C3%B4%20A%20Cocoa%20Farmer%20Speaks%20copy.mp4",
       "posterWebp": "final_gifs/The%20True%20Cost%20of%20Your%20Chocolate%20%CE%93%C3%87%C3%B4%20A%20Cocoa%20Farmer%20Speaks%20copy.webp"
     },
     {
       "id": "Unethical Labour - Josh (Alexa)",
-      "title": "Unethical Labour - Josh (Alexa)",
+      "title": "Josh - unethical labor survivor",
       "poster": "final_gifs/Unethical%20Labour%20-%20Josh%20%28Alexa%29.gif",
       "video": "final_gifs/Unethical%20Labour%20-%20Josh%20%28Alexa%29.mp4",
       "posterWebp": "final_gifs/Unethical%20Labour%20-%20Josh%20%28Alexa%29.webp"
     },
     {
       "id": "vid",
-      "title": "vid",
+      "title": "Amaya - foster care",
       "poster": "final_gifs/vid.gif",
       "video": "final_gifs/vid.mp4",
       "posterWebp": "final_gifs/vid.webp"
     },
     {
       "id": "zoti",
-      "title": "zoti",
+      "title": "Kaili - abused",
       "poster": "final_gifs/zoti.gif",
       "video": "final_gifs/zoti.mp4",
       "posterWebp": "final_gifs/zoti.webp"
     },
     {
       "id": "zoti (1)",
-      "title": "zoti (1)",
+      "title": "Nepalese - worker killed",
       "poster": "final_gifs/zoti%20%281%29.gif",
       "video": "final_gifs/zoti%20%281%29.mp4",
       "posterWebp": "final_gifs/zoti%20%281%29.webp"
     },
     {
       "id": "zoti (2)",
-      "title": "zoti (2)",
+      "title": "Shavana - nepalese worker",
       "poster": "final_gifs/zoti%20%282%29.gif",
       "video": "final_gifs/zoti%20%282%29.mp4",
       "posterWebp": "final_gifs/zoti%20%282%29.webp"

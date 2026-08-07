@@ -1,0 +1,129 @@
+{
+  "_README": [
+    "Fill in newTitle for any tile whose caption should change. Leave it \"\" to keep the current title.",
+    "Do NOT change id. id is the media filename stem and is what pairs a caption to its video.",
+    "When you are done, run: python tools/apply_titles.py --dry-run"
+  ],
+  "titles": [
+    {
+      "id": "Adam (Child Labour) - Alexa",
+      "currentTitle": "Adam (Child Labour) - Alexa",
+      "newTitle": "Adam - child laborer"
+    },
+    {
+      "id": "Amala (Child Labour) - Alexa",
+      "currentTitle": "Amala (Child Labour) - Alexa",
+      "newTitle": "Amala - child laborer"
+    },
+    {
+      "id": "Amina - Nairobi",
+      "currentTitle": "Amina - Nairobi",
+      "newTitle": "Amina - Nairobi"
+    },
+    {
+      "id": "arabic",
+      "currentTitle": "arabic",
+      "newTitle": "Arabic - victim"
+    },
+    {
+      "id": "Congo (Cobalt Mines)",
+      "currentTitle": "Congo (Cobalt Mines)",
+      "newTitle": "Congo - cobalt mines"
+    },
+    {
+      "id": "Domestic Violence 1 - Smita Samanta",
+      "currentTitle": "Domestic Violence 1 - Smita Samanta",
+      "newTitle": "Domestic violence victim"
+    },
+    {
+      "id": "Domestic Violence 2 - Smita Samanta",
+      "currentTitle": "Domestic Violence 2 - Smita Samanta",
+      "newTitle": "Domestic violence victim"
+    },
+    {
+      "id": "Domestic Violence 3 - Smita Samanta",
+      "currentTitle": "Domestic Violence 3 - Smita Samanta",
+      "newTitle": "Domestic violence victim"
+    },
+    {
+      "id": "Dorothy_s Story - Nate",
+      "currentTitle": "Dorothy's Story - Nate",
+      "newTitle": "Dorothy's story - survivor"
+    },
+    {
+      "id": "Forced Labor - Celine R.",
+      "currentTitle": "Forced Labor - Celine R.",
+      "newTitle": "Forced labor survivor"
+    },
+    {
+      "id": "George (church)",
+      "currentTitle": "George (church)",
+      "newTitle": "George - church abuse"
+    },
+    {
+      "id": "Human Trafficking - Smita Samanta",
+      "currentTitle": "Human Trafficking - Smita Samanta",
+      "newTitle": "Human trafficking survivor"
+    },
+    {
+      "id": "Jaoanese (Forced Conscription)",
+      "currentTitle": "Jaoanese (Forced Conscription)",
+      "newTitle": "Jaonese - forced conscription"
+    },
+    {
+      "id": "Kayla (sex trafficking)",
+      "currentTitle": "Kayla (sex trafficking)",
+      "newTitle": "Kayla - sex trafficking survivor"
+    },
+    {
+      "id": "Latin Kings (Conscription)",
+      "currentTitle": "Latin Kings (Conscription)",
+      "newTitle": "Latin Kings - forced conscription"
+    },
+    {
+      "id": "Omar - Cobalt mine",
+      "currentTitle": "Omar - Cobalt mine",
+      "newTitle": "Omar - cobalt mine survivor"
+    },
+    {
+      "id": "Samiya - Bangladesh",
+      "currentTitle": "Samiya - Bangladesh",
+      "newTitle": "Samiya - child laborer, Bangladesh"
+    },
+    {
+      "id": "Survivor - Forced Labor #4",
+      "currentTitle": "Survivor - Forced Labor #4",
+      "newTitle": "Survivor - forced labor"
+    },
+    {
+      "id": "The True Cost of Your Chocolate ΓÇô A Cocoa Farmer Speaks copy",
+      "currentTitle": "The True Cost of Your Chocolate ΓÇô A Cocoa Farmer Speaks",
+      "newTitle": "Cocao farmer - the true cost of chocolate"
+    },
+    {
+      "id": "Unethical Labour - Josh (Alexa)",
+      "currentTitle": "Unethical Labour - Josh (Alexa)",
+      "newTitle": "Josh - unethical labor survivor"
+    },
+    {
+      "id": "vid",
+      "currentTitle": "vid",
+      "newTitle": "Amaya - foster care"
+    },
+    {
+      "id": "zoti",
+      "currentTitle": "zoti",
+      "newTitle": "Kaili - abused"
+    },
+    {
+      "id": "zoti (1)",
+      "currentTitle": "zoti (1)",
+      "newTitle": "Nepalese - worker killed"
+    },
+    {
+      "id": "zoti (2)",
+      "currentTitle": "zoti (2)",
+      "newTitle": "Shavana - nepalese worker"
+    }
+  ]
+}

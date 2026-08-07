@@ -193,11 +193,16 @@ your `background.png`. For a file kept somewhere else entirely, set `background.
 
 ### Adding a story
 
-1. Export a matched pair with **identical base filenames** — `My Story.gif` and `My Story.mp4`.
-2. Drop both into `final_gifs/`.
-3. Run `start.cmd` / `./start.sh`. The manifest picks the pair up automatically and prints a
+1. Drop the source video into `final_gifs/` — for example, `My Story.mp4`.
+2. Run `python tools/generate_posters.py --apply` to create the matching `My Story.gif`.
+3. Run `python tools/compress_media.py --apply --keep-originals ../originals` to prepare the video
+   for reliable streaming. Pass one or more MP4 filenames after the options to process only a new
+   batch instead of every video.
+4. Run `python tools/compress_posters.py --apply` to create the smaller animated WebP used by
+   modern browsers.
+5. Run `start.cmd` / `./start.sh`. The manifest picks the matched files up automatically and prints a
    warning for anything left unpaired.
-4. Commit both files; `.gitattributes` routes them into Git LFS for you.
+6. Commit the MP4, GIF, and WebP; `.gitattributes` routes them into Git LFS for you.
 
 Titles are auto-derived from the filename. Edit the `title` field in `stories.json` to change
 what appears under the player — regenerating the manifest preserves your edits.
@@ -359,9 +364,18 @@ stay in place as a fallback, wired up through a `<picture>` element, so a browse
 decode WebP still gets a wall.
 
 ```bash
+python tools/generate_posters.py --check
+python tools/generate_posters.py --apply   # MP4 -> 3-second 203x360 looping GIF
 python tools/compress_posters.py --apply
 python tools/serve.py --manifest-only     # pick up the new posters
 ```
+
+`generate_posters.py` selects only MP4s that do not already have a same-stem GIF. It center-crops
+each source to the existing phone-tile shape and uses ffmpeg palette generation to keep the
+three-second, 25 fps fallback close to the dimensions, motion, and file size of the original set.
+Use `--force` only when an existing GIF intentionally needs to be replaced.
+`compress_media.py` and `compress_posters.py` also accept filenames after their options when only
+the new batch should be processed.
 
 ### Does it actually load faster?
 

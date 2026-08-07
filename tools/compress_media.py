@@ -22,6 +22,7 @@ Usage:
     python tools/compress_media.py --check     # report only, encodes nothing
     python tools/compress_media.py --apply     # re-encode in place
     python tools/compress_media.py --apply --keep-originals ../originals
+    python tools/compress_media.py --apply "New Story.mp4"
 """
 from __future__ import annotations
 
@@ -117,12 +118,18 @@ def main() -> int:
                     help="peak video bitrate ceiling in kbps (default %(default)s)")
     ap.add_argument("--keep-originals", metavar="DIR",
                     help="move each original here instead of deleting it")
+    ap.add_argument("files", nargs="*", metavar="MP4",
+                    help="specific files in final_gifs (default: every MP4)")
     args = ap.parse_args()
 
     which("ffmpeg")
     which("ffprobe")
 
-    videos = sorted(MEDIA.glob("*.mp4"))
+    videos = ([MEDIA / Path(name).name for name in args.files]
+              if args.files else sorted(MEDIA.glob("*.mp4")))
+    invalid = [v.name for v in videos if v.suffix.lower() != ".mp4" or not v.is_file()]
+    if invalid:
+        sys.exit(f"MP4 file(s) not found in {MEDIA}: {', '.join(invalid)}")
     if not videos:
         sys.exit(f"No .mp4 files in {MEDIA}")
 
